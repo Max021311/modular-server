@@ -1,0 +1,33 @@
+{
+  "name": "modular-server",
+  "version": "0.0.1",
+  "main": "src/index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "tsc --build --clean",
+    "start": "node build/index.js",
+    "lint": "yarn eslint"
+  },
+  "dependencies": {
+    "@fastify/type-provider-json-schema-to-ts": "^4.0.0",
+    "bcrypt": "^5.1.1",
+    "fastify": "^5.0.0",
+    "fastify-plugin": "^5.0.0",
+    "json-schema-to-ts": "^3.1.1",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.5.5",
+    "@typescript-eslint/eslint-plugin": "^8.6.0",
+    "@typescript-eslint/parser": "^8.6.0",
+    "eslint": "^9.11.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.30.0",
+    "eslint-plugin-n": "^17.10.3",
+    "eslint-plugin-promise": "^7.1.0",
+    "typescript": "5.5.2"
+  }
+}
