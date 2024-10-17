@@ -7,6 +7,8 @@ Install dependencies.
 yarn
 ```
 
+### Production mode
+
 Build the project.
 ```sh
 yarn build
@@ -16,6 +18,13 @@ Run the project.
 ```sh
 yarn start
 ```
+
+### Development mode
+
+```sh
+yarn dev
+```
+
 
 ## Linter
 
