@@ -32,6 +32,7 @@ export async function up (knex: Knex): Promise<void> {
 
 export async function down (knex: Knex): Promise<void> {
   return knex.schema
+    .dropTable('Users')
     .raw('DROP FUNCTION IF EXISTS preserve_created_at_update();')
     .raw('DROP TRIGGER IF EXISTS preserve_created_at_trigger ON "Users";')
 }
