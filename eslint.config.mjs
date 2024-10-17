@@ -29,6 +29,7 @@ export default [
     rules: {
       ...standardConfig.rules,
       ...tsPlugin.configs.recommended.rules,
+      'no-console': 1
     },
   },
   {
@@ -49,6 +50,7 @@ export default [
     },
     rules: {
       ...standardConfig.rules,
+      'no-console': 1
     }
   }
 ]

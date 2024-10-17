@@ -1,22 +1,43 @@
 import { HttpError } from '../common/error'
 import bcrypt from 'bcrypt'
 import jwtService, { TOKEN_SCOPES } from './jwt'
+import knex from './../common/bd'
 
-const HASH = '$2b$15$ri/VHX2oGZjWTH0Ve4tEYOHoD1dg0N2iZo6Kd6WIy/S.gp30SSlOG'
+const Users = () => knex('Users')
+  .select('id', 'name', 'user', 'permissions', 'createdAt', 'updatedAt')
 
 export class UserService {
   /**
    * @throws {HttpError}
   */
   async login (email: string, password: string): Promise<string> {
-    const result = await bcrypt.compare(password, HASH)
+    const user = await Users().select('password').first().where('user', email)
+    if (!user) { throw new HttpError('Wrong user or password', 401) }
+
+    const result = await bcrypt.compare(password, user.password)
     if (!result) { throw new HttpError('Wrong user or password', 401) }
+
     return await jwtService.sign({
-      id: 1,
-      name: 'Loremipsum dolor sit amet',
-      user: 'example@example.com',
+      id: user.id,
+      name: user.name,
+      user: user.user,
+      permissions: user.permissions,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
       scope: 'user'
     })
+  }
+
+  async getById (id: number) {
+    return Users()
+      .first()
+      .where('id', id)
+  }
+
+  async getByEmail (email: string) {
+    return Users()
+      .first()
+      .where('user', email)
   }
 
   async verifyUserToken (jwt: string) {
