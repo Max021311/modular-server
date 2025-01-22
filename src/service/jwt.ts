@@ -6,9 +6,12 @@ export const TOKEN_SCOPES = {
 } as const
 
 export interface UserTokenPayload {
-  id: number,
-  name: string,
+  id: number
+  name: string
   user: string
+  permissions: string[]
+  createdAt: Date,
+  updatedAt: Date
   scope: typeof TOKEN_SCOPES.USER
 }
 

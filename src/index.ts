@@ -1,7 +1,10 @@
 import fastify from 'fastify'
 import routesPlugin from './routes'
+import { options } from './common/logger'
 
-const server = fastify()
+const server = fastify({
+  logger: options
+})
 
 server.route({
   method: 'GET',
@@ -17,11 +20,17 @@ server.route({
 
 server.register(routesPlugin)
 
-server.listen({ port: 8080 }, (err, address) => {
-  if (err) {
-    server.log.error(err)
-    process.exit(1)
+server.listen(
+  {
+    port: parseInt(process.env.PORT ?? '8080', 10)
+  },
+  (err, address) => {
+    if (err) {
+      server.log.error(err)
+      process.exit(1)
+    }
+    // eslint-disable-next-line no-console
+    console.log(server.printRoutes())
+    server.log.info(`Server listening at ${address}`)
   }
-  console.log(server.printRoutes())
-  server.log.info(`Server listening at ${address}`)
-})
+)
