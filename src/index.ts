@@ -1,9 +1,14 @@
 import fastify from 'fastify'
 import routesPlugin from './routes'
 import { options } from './common/logger'
+import cors from '@fastify/cors'
 
 const server = fastify({
   logger: options
+})
+
+server.register(cors, {
+  origin: ['http://localhost:3000']
 })
 
 server.route({
