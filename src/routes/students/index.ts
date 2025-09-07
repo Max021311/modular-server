@@ -7,6 +7,7 @@ import { HttpError } from '#src/common/error'
 import { TokenExpiredError, JsonWebTokenError, NotBeforeError } from 'jsonwebtoken'
 import { fastifyErrorSchema } from '#src/common/schemas'
 import verifyUserToken from '#src/prehandlers/verify-user-token'
+import { orderQueryToOrder } from '#src/common/order-query'
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -61,14 +62,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const studentWithCareerResponseSchema = {
     type: 'object',
     properties: {
-      id: { type: 'integer' },
-      name: { type: 'string' },
-      code: { type: 'string' },
-      careerId: { type: 'integer' },
-      email: { type: 'string' },
-      telephone: { type: 'string' },
-      createdAt: { type: 'string', format: 'date-time' },
-      updatedAt: { type: 'string', format: 'date-time' },
+      ...studentResponseSchema.properties,
       career: {
         description: 'This field is only available if the endpoint support include the association',
         type: 'object',
@@ -89,9 +83,9 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     properties: {
       order: {
         type: 'string',
-        enum: ['createdAt', '-createdAt'],
+        enum: ['Students.createdAt', '-Students.createdAt'],
         description: "Order by the field name. A minus(-) means that we'll order the file collections in descending order.",
-        default: '-createdAt'
+        default: '-Students.createdAt'
       },
       limit: {
         type: 'integer',
@@ -103,7 +97,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         type: 'integer',
         minimum: 0,
         default: 0
-      }
+      },
+      includeCareer: { type: 'boolean', description: 'Include the field `career` if is enabled' }
     }
   } as const satisfies JSONSchema
 
@@ -237,7 +232,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
             total: { type: 'integer' },
             records: {
               type: 'array',
-              items: studentResponseSchema
+              items: studentWithCareerResponseSchema
             }
           }
         } as const satisfies JSONSchema
@@ -246,18 +241,28 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     preHandler: verifyUserToken,
     async handler (request, reply) {
       const services = request.server.services
-      const { limit = 50, offset = 0 } = request.query
+      const { limit = 50, offset = 0, order, includeCareer } = request.query
 
       const result = await services.studentService().findAndCount({
         limit,
-        offset
+        offset,
+        order: orderQueryToOrder(order) ?? undefined,
+        includeCareer
       })
 
       const records = result.records.map(record => {
+        const career = record.career
         return {
           ...record,
           createdAt: record.createdAt.toISOString(),
-          updatedAt: record.updatedAt.toISOString()
+          updatedAt: record.updatedAt.toISOString(),
+          career: career !== undefined
+            ? {
+                ...career,
+                createdAt: career.createdAt.toISOString(),
+                updatedAt: career.updatedAt.toISOString()
+              }
+            : undefined
         }
       })
 

@@ -65,7 +65,7 @@ export class StudentService implements StudentServiceI {
 
     if (includeCareer === true) selectQuery = this.applyCareerJoin(selectQuery)
 
-    if (order) selectQuery = selectQuery.orderBy(order[1], order[0])
+    if (order) selectQuery = selectQuery.orderBy(order[0], order[1])
 
     const [total, records] = await Promise.all([
       db.table('Students')
@@ -74,7 +74,27 @@ export class StudentService implements StudentServiceI {
     ])
     return {
       total: total?.count as number,
-      records
+      records: records.map((result) => {
+        return {
+          id: result.id,
+          name: result.name,
+          code: result.code,
+          careerId: result.careerId,
+          email: result.email,
+          telephone: result.telephone,
+          createdAt: result.createdAt,
+          updatedAt: result.updatedAt,
+          career: 'career_id' in result
+            ? {
+                id: result.career_id,
+                name: result.career_name,
+                slug: result.career_slug,
+                createdAt: result.career_createdAt,
+                updatedAt: result.career_updatedAt
+              }
+            : undefined
+        }
+      })
     }
   }
 

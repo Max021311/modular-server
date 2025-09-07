@@ -24,7 +24,7 @@ export interface FindByIdOpts {
 
 export interface StudentServiceI {
   createStudent(studentData: CreateStudent): Promise<StudentWithouPassword>
-  findAndCount (params: FindAndCountParams): Promise<{ total: number, records: StudentWithouPassword[] }>
+  findAndCount (params: FindAndCountParams): Promise<{ total: number, records: StudentWithCareer[] }>
   updateStudent(id: number, studentData: UpdateStudent): Promise<StudentWithouPassword>
   findById(id: number, opts?: FindByIdOpts): Promise<StudentWithCareer | null>
 }

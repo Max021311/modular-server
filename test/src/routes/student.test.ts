@@ -128,6 +128,9 @@ describe('Students API', () => {
         method: METHOD,
         headers: {
           authorization: `Bearer ${token}`
+        },
+        query: {
+          includeCareer: 'true'
         }
       })
       
@@ -143,6 +146,11 @@ describe('Students API', () => {
       expect(record).toHaveProperty('name')
       expect(record).toHaveProperty('code')
       expect(record).toHaveProperty('careerId')
+      expect(record).toHaveProperty('career', {
+        ...career,
+        createdAt: career.createdAt.toISOString(),
+        updatedAt: career.updatedAt.toISOString()
+      })
       expect(record).toHaveProperty('email')
       expect(record).toHaveProperty('telephone')
       expect(record).toHaveProperty('createdAt')
