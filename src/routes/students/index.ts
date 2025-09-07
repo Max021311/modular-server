@@ -5,6 +5,7 @@ import TOKEN_SCOPES from '#src/common/token-scopes'
 import { FastifyPluginAsync } from 'fastify'
 import { HttpError } from '#src/common/error'
 import { TokenExpiredError, JsonWebTokenError, NotBeforeError } from 'jsonwebtoken'
+import { fastifyErrorSchema } from '#src/common/schemas'
 import verifyUserToken from '#src/prehandlers/verify-user-token'
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
@@ -55,6 +56,32 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' }
     }
+  } as const satisfies JSONSchema
+
+  const studentWithCareerResponseSchema = {
+    type: 'object',
+    properties: {
+      id: { type: 'integer' },
+      name: { type: 'string' },
+      code: { type: 'string' },
+      careerId: { type: 'integer' },
+      email: { type: 'string' },
+      telephone: { type: 'string' },
+      createdAt: { type: 'string', format: 'date-time' },
+      updatedAt: { type: 'string', format: 'date-time' },
+      career: {
+        description: 'This field is only available if the endpoint support include the association',
+        type: 'object',
+        properties: {
+          id: { type: 'integer' },
+          name: { type: 'string' },
+          slug: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' }
+        }
+      }
+    },
+    required: ['id', 'name', 'code', 'careerId', 'email', 'telephone', 'createdAt', 'updatedAt']
   } as const satisfies JSONSchema
 
   const studentsQuerySchema = {
@@ -237,6 +264,65 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       await reply.status(200).send({
         total: result.total,
         records
+      })
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    url: '/:id',
+    schema: {
+      tags: ['Students'],
+      querystring: {
+        type: 'object',
+        properties: {
+          includeCareer: { type: 'boolean', description: 'Include the field `career` if is enabled' }
+        },
+        additionalProperties: false
+      } as const satisfies JSONSchema,
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer' }
+        },
+        required: ['id']
+      } as const satisfies JSONSchema,
+      response: {
+        200: studentWithCareerResponseSchema,
+        404: fastifyErrorSchema
+      }
+    },
+    preHandler: verifyUserToken,
+    async handler (request, reply) {
+      const services = request.server.services
+      const { id } = request.params
+
+      const student = await services.studentService().findById(id, {
+        includeCareer: request.query.includeCareer
+      })
+
+      if (!student) {
+        throw new HttpError('Student not found', 404)
+      }
+
+      await reply.status(200).send({
+        ...student,
+        createdAt: student.createdAt.toISOString(),
+        updatedAt: student.updatedAt.toISOString(),
+        career: student.career !== undefined
+          ? {
+              ...student.career,
+              createdAt: student.career.createdAt.toISOString(),
+              updatedAt: student.career.updatedAt.toISOString()
+            }
+          : undefined
       })
     }
   })

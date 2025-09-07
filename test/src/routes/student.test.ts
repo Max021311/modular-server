@@ -135,7 +135,7 @@ describe('Students API', () => {
       const body = res.json()
       expect(body).toHaveProperty('total')
       expect(body).toHaveProperty('records')
-      expect(body.total).toBeGreaterThanOrEqual(5)
+      expect(body.total).toBe(5)
       expect(body.records).toBeInstanceOf(Array)
 
       const record = body.records[0]
@@ -188,7 +188,7 @@ describe('Students API', () => {
       expect(res.statusCode).toBe(200)
       const body = res.json()
       expect(body.records.length).toBe(3)
-      expect(body.total).toBeGreaterThanOrEqual(5)
+      expect(body.total).toBe(5)
     })
 
     it('Success get students with limit and offset parameters', async () => {
@@ -231,7 +231,90 @@ describe('Students API', () => {
       expect(res.statusCode).toBe(200)
       const body = res.json()
       expect(body.records.length).toBe(2)
-      expect(body.total).toBeGreaterThanOrEqual(5)
+      expect(body.total).toBe(5)
+    })
+  })
+
+  describe('GET /students/:id', () => {
+    const METHOD = 'GET'
+    const PATH = '/students/:id'
+    
+    it('Success get student by id', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const career = await careerFactory.create({})
+      const student = await studentFactory.create({ careerId: career.id })
+
+      const res = await app.inject({
+        url: PATH.replace(':id', student.id.toString()),
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          includeCareer: 'true'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body).toHaveProperty('id', student.id)
+      expect(body).toHaveProperty('name', student.name)
+      expect(body).toHaveProperty('code', student.code)
+      expect(body).toHaveProperty('careerId', student.careerId)
+      expect(body).toHaveProperty('career', {
+        ...career,
+        createdAt: career.createdAt.toISOString(),
+        updatedAt: career.updatedAt.toISOString()
+      })
+      expect(body).toHaveProperty('email', student.email)
+      expect(body).toHaveProperty('telephone', student.telephone)
+      expect(body).toHaveProperty('createdAt')
+      expect(body).toHaveProperty('updatedAt')
+    })
+
+    it('Returns 404 when student not found', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const nonExistentId = 99999
+
+      const res = await app.inject({
+        url: PATH.replace(':id', nonExistentId.toString()),
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(404)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Student not found')
     })
   })
 

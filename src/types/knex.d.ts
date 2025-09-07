@@ -7,6 +7,6 @@ declare module 'knex/types/tables' {
   interface Tables {
     Users: Knex.CompositeTableType<User, CreateUser, UpdateUser>
     Students: Knex.CompositeTableType<Student, CreateStudent, UpdateStudent>
-    Career: Knex.CompositeTableType<Career, CreateCareer, UpdateCareer>
+    Careers: Knex.CompositeTableType<Career, CreateCareer, UpdateCareer>
   }
 }

@@ -46,7 +46,10 @@ function build () {
         }],
         tags: [
           { name: 'Users', description: 'User related end-points' },
-          { name: 'Students', description: 'Student related end-points' }
+          { name: 'Students', description: 'Student related end-points' },
+          { name: 'Careers', description: 'Careers related end-points' },
+          { name: 'Departments', description: 'Departments related end-points' },
+          { name: 'Vacancies', description: 'Vacancies related end-points' }
         ]
       }
     })
