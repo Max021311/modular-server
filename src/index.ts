@@ -1,29 +1,8 @@
-import fastify from 'fastify'
-import routesPlugin from './routes'
-import { options } from './common/logger'
-import cors from '@fastify/cors'
+import build from './build'
 
-const server = fastify({
-  logger: options
-})
+const server = build()
 
-server.register(cors, {
-  origin: ['http://localhost:3000']
-})
-
-server.route({
-  method: 'GET',
-  url: '/ok',
-  async handler (request, reply) {
-    server.log.info({
-      querystring: request.query,
-      headers: request.headers
-    })
-    await reply.status(200).send('ok')
-  }
-})
-
-server.register(routesPlugin)
+server.log.info({ env: process.env.NODE_ENV })
 
 server.listen(
   {

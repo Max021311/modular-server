@@ -14,7 +14,7 @@ const config: Knex.Config = {
     ssl: process.env.DB_SSL ? { rejectUnauthorized: false } : false
   },
   pool: {
-    min: 2,
+    min: 0,
     max: 10
   },
   migrations: {

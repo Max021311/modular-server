@@ -2,5 +2,5 @@
   "watch": ["src"],
   "ext": "ts,json",
   "ignore": ["src/**/*.test.ts"],
-  "exec": "node -r ts-node/register --env-file .env ./src/index.ts"
+  "exec": "yarn tsx --env-file .env ./src/index.ts"
 }

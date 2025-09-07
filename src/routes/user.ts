@@ -2,7 +2,6 @@ import fp from 'fastify-plugin'
 import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts'
 import { JSONSchema } from 'json-schema-to-ts'
 import verifyUserToken from '../prehandlers/verify-user-token'
-import userService from '../service/user'
 
 export default fp(async function RoutesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -38,7 +37,7 @@ export default fp(async function RoutesPlugin (fastify) {
       }
     },
     async handler (request, reply) {
-      const token = await userService.login(request.body.user, request.body.password)
+      const token = await request.server.services.userService().login(request.body.user, request.body.password)
       await reply.status(200).send({ token })
     }
   })

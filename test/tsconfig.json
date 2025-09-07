@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "typeRoots": ["../src/types"],                                  /* Specify multiple folders that act like './node_modules/@types'. */
+    "paths": {
+      "#test/*": ["./test/*"],
+      "#src/*": ["./src/*"]
+    }
+  },
+  "include": ["../test/**/*", "../src/**/*"]
+}

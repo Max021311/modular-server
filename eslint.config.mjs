@@ -8,6 +8,7 @@ import promisePlugin from 'eslint-plugin-promise';
 export default [
   {
     files: ['src/**/*.ts'], // Aplica la configuración a archivos .ts
+    ignores: ['node_modules', 'dist', 'src/**/*.test.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -34,7 +35,7 @@ export default [
   },
   {
     files: ['src/**/*.js'], // Aplica la configuración a archivos .js
-    ignores: ['node_modules', 'dist'], // Ignora carpetas innecesarias
+    ignores: ['node_modules', 'dist', 'src/**/*.test.js'], // Ignora carpetas innecesarias
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'module',
