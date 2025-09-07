@@ -3,6 +3,8 @@ import routesPlugin from './routes'
 import { options } from './common/logger'
 import cors from '@fastify/cors'
 import servicesPlugin from './plugins/services'
+import fastifySwagger from '@fastify/swagger'
+import scalarPlugin from '@scalar/fastify-api-reference'
 
 function build () {
   const server = fastify({
@@ -29,13 +31,33 @@ function build () {
     }
   })
 
-  server.register(cors, {
-    origin: ['http://localhost:3000']
-  })
-
-  server.register(servicesPlugin)
-
-  server.register(routesPlugin)
+  server
+    .register(fastifySwagger, {
+      openapi: {
+        openapi: '3.0.0',
+        info: {
+          title: 'Modular server API',
+          description: 'API documentation',
+          version: '0.1.0'
+        },
+        servers: [{
+          url: 'http://localhost:8080',
+          description: 'Development server'
+        }],
+        tags: [
+          { name: 'Users', description: 'User related end-points' },
+          { name: 'Students', description: 'Student related end-points' }
+        ]
+      }
+    })
+    .register(scalarPlugin, {
+      routePrefix: '/documentation'
+    })
+    .register(cors, {
+      origin: ['http://localhost:3000']
+    })
+    .register(servicesPlugin)
+    .register(routesPlugin)
 
   server.route({
     method: 'GET',

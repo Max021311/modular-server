@@ -107,6 +107,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'POST',
     url: '/invite',
     schema: {
+      tags: ['Students'],
       body: inviteBodySchema,
       response: {
         204: {
@@ -134,10 +135,11 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'POST',
     url: '/add',
     schema: {
+      tags: ['Students'],
       headers: {
         type: 'object',
         properties: {
-          authorization: { type: 'string' }
+          authorization: { type: 'string', description: 'A JWT token with scope `invite-user`' }
         },
         required: ['authorization']
       } as const satisfies JSONSchema,
@@ -192,6 +194,14 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'GET',
     url: '/',
     schema: {
+      tags: ['Students'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
       querystring: studentsQuerySchema,
       response: {
         200: {
@@ -235,6 +245,14 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'PATCH',
     url: '/:id',
     schema: {
+      tags: ['Students'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
       params: {
         type: 'object',
         properties: {

@@ -24,6 +24,7 @@ export default fp(async function RoutesPlugin (fastify) {
     method: 'POST',
     url: '/user/auth',
     schema: {
+      tags: ['Users'],
       body: loginBodySchema,
       response: {
         200: {
@@ -45,6 +46,16 @@ export default fp(async function RoutesPlugin (fastify) {
   server.route({
     method: 'GET',
     url: '/user/auth',
+    schema: {
+      tags: ['Users'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema
+    },
     preHandler: verifyUserToken,
     handler (request, reply) {
       server.log.info(request.user, 'User verified')
