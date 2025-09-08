@@ -8,7 +8,7 @@ export interface UserTokenPayload {
   user: string
   role: keyof Roles
   permissions: PERMISSIONS[]
-  createdAt: Date,
+  createdAt: Date
   updatedAt: Date
   scope: typeof TOKEN_SCOPES.USER
 }
