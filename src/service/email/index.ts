@@ -1,13 +1,20 @@
 import nodemailer from 'nodemailer'
-import type { EmailServiceI, SendInviteEmailParams, EmailServiceConfig } from './types'
+import type {
+  EmailServiceI,
+  SendInviteStudentEmailParams,
+  SendInviteUserEmailParams,
+  EmailServiceConfig,
+  SendEmailParams
+} from './types'
 import type { ModuleConstructorParams } from '#src/service/types'
 
-type ConstructorParams = ModuleConstructorParams<'logger', unknown, EmailServiceConfig>
+type ConstructorParams = ModuleConstructorParams<'logger'|'services', 'templateRender', EmailServiceConfig>
 
 export class EmailService implements EmailServiceI {
   private readonly transporter: ReturnType<typeof nodemailer['createTransport']>
   private readonly user: string
   private readonly logger: ConstructorParams['context']['logger']
+  private readonly templateRender: ConstructorParams['context']['services']['templateRender']
   private readonly enableEmail: boolean
 
   constructor (params: ConstructorParams) {
@@ -15,6 +22,8 @@ export class EmailService implements EmailServiceI {
     if (!user) throw new Error('Missing user for email service')
     if (!password) throw new Error('Missing password for email service')
     this.enableEmail = enableEmail
+
+    this.templateRender = params.context.services.templateRender
 
     this.user = user
     this.logger = params.context.logger
@@ -27,18 +36,14 @@ export class EmailService implements EmailServiceI {
     })
   }
 
-  async sendInviteEmail (params: SendInviteEmailParams): Promise<void> {
+  async sendEmail (params: SendEmailParams): Promise<void> {
     try {
-      if (!this.enableEmail) {
-        this.logger.info(params, 'Send invite email')
-        return Promise.resolve()
-      }
       const info = await this.transporter.sendMail({
         from: this.user,
-        to: params.email,
-        subject: 'Completa tu registro',
-        text: `Continua tu registro en ${params.completionUrl}`,
-        html: `<h1>Continua tu registro en ${params.completionUrl}</h1>`
+        to: params.to,
+        subject: params.subject,
+        text: params.text,
+        html: params.html
       })
       this.logger.info({
         messageId: info.messageId,
@@ -48,5 +53,81 @@ export class EmailService implements EmailServiceI {
       this.logger.error(error, 'Error sending email')
       throw error
     }
+  }
+
+  async sendInviteStudentEmail (params: SendInviteStudentEmailParams): Promise<void> {
+    const text = this.templateRender().render({
+      template: 'invite-student',
+      file: 'body.txt',
+      data: {
+        completionUrl: params.completionUrl
+      }
+    })
+    const html = this.templateRender().render({
+      template: 'invite-student',
+      file: 'body.html',
+      data: {
+        completionUrl: params.completionUrl
+      }
+    })
+    const subject = this.templateRender().render({
+      template: 'invite-student',
+      file: 'subject.txt',
+      data: {
+        completionUrl: params.completionUrl
+      }
+    })
+    if (!this.enableEmail) {
+      this.logger.info({
+        params,
+        subject,
+        text
+      }, 'Send invite email')
+      return Promise.resolve()
+    }
+    await this.sendEmail({
+      to: params.email,
+      subject,
+      text,
+      html
+    })
+  }
+
+  async sendInviteUserEmail (params: SendInviteUserEmailParams): Promise<void> {
+    const text = this.templateRender().render({
+      template: 'invite-user',
+      file: 'body.txt',
+      data: {
+        completionUrl: params.completionUrl
+      }
+    })
+    const html = this.templateRender().render({
+      template: 'invite-user',
+      file: 'body.html',
+      data: {
+        completionUrl: params.completionUrl
+      }
+    })
+    const subject = this.templateRender().render({
+      template: 'invite-user',
+      file: 'subject.txt',
+      data: {
+        completionUrl: params.completionUrl
+      }
+    })
+    if (!this.enableEmail) {
+      this.logger.info({
+        params,
+        subject,
+        text
+      }, 'Send invite email')
+      return Promise.resolve()
+    }
+    await this.sendEmail({
+      to: params.email,
+      subject,
+      text,
+      html
+    })
   }
 }

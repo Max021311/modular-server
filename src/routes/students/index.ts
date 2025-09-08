@@ -145,7 +145,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         email,
         scope: TOKEN_SCOPES.INVITE_USER
       })
-      await services.emailService().sendInviteEmail({
+      await services.emailService().sendInviteStudentEmail({
         email,
         completionUrl: `${config.webUrl}/invite?${token}`
       })

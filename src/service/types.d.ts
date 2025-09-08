@@ -3,6 +3,7 @@ import type { UserServiceI } from '#src/service/user/types'
 import type { EmailServiceI } from '#src/service/email/types'
 import type { StudentServiceI } from '#src/service/student/types'
 import type { BcryptServiceI } from '#src/service/bcrypt/types'
+import type { TemplateRenderI } from '#src/service/template-render/types'
 import type { BaseLogger } from 'pino'
 import type { ConnectionManager } from '#src/common/bd'
 
@@ -14,6 +15,7 @@ export interface Services {
   emailService: () => EmailServiceI
   studentService: () => StudentServiceI
   bcryptService: () => BcryptServiceI
+  templateRender: () => TemplateRenderI
 }
 
 export interface ApplicationContext <T extends (keyof Services | unknown) = keyof Services> {

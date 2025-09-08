@@ -6,6 +6,7 @@ import { UserService } from './user'
 import { EmailService } from './email'
 import { StudentService } from './student'
 import { BcryptService } from './bcrypt'
+import { TemplateRender } from './template-render/'
 import { ConnectionManager } from '#src/common/bd'
 
 interface GetServicesParams {
@@ -41,6 +42,9 @@ export function getServices (params: GetServicesParams): Services {
     context
   })
   context.services.bcryptService = lazyLoad((p) => new BcryptService(p), {
+    context
+  })
+  context.services.templateRender = lazyLoad((p) => new TemplateRender(p), {
     context
   })
   return context.services
