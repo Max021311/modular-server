@@ -8,7 +8,6 @@ import type {
   FindByIdOpts
 } from './types'
 import type { ModuleConstructorParams } from '#src/service/types'
-import { type Knex } from 'knex'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger'|'connectionManager',

@@ -5,6 +5,8 @@ import TOKEN_SCOPES from '../common/token-scopes'
 import buildVerifyUserToken from '../prehandlers/verify-user-token'
 import { PERMISSIONS } from '#src/common/permissions'
 import config from '#src/common/configuration'
+import { HttpError } from '#src/common/error'
+import { TokenExpiredError, JsonWebTokenError, NotBeforeError } from 'jsonwebtoken'
 
 export default fp(async function RoutesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -41,6 +43,16 @@ export default fp(async function RoutesPlugin (fastify) {
       }
     },
     required: ['name', 'user', 'role', 'permissions']
+  } as const satisfies JSONSchema
+
+  const addUserBodySchema = {
+    type: 'object',
+    properties: {
+      password: {
+        type: 'string'
+      }
+    },
+    required: ['password']
   } as const satisfies JSONSchema
 
   server.route({
@@ -111,6 +123,64 @@ export default fp(async function RoutesPlugin (fastify) {
         completionUrl: `${config.webUrl}/invite-user?${token}`
       })
       await reply.status(200).send(null)
+    }
+  })
+
+  server.route({
+    method: 'POST',
+    url: '/user/add',
+    schema: {
+      tags: ['Users'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `invite-user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      body: addUserBodySchema,
+      response: {
+        201: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer' }
+          }
+        } as const satisfies JSONSchema
+      }
+    },
+    async handler (request, reply) {
+      const services = request.server.services
+      const authHeader = request.headers.authorization
+      if (!authHeader.startsWith('Bearer ')) {
+        throw new HttpError('Invalid token', 401)
+      }
+
+      const token = authHeader.substring(7)
+      const decoded = await services.jwtService()
+        .verify(token)
+        .catch((error) => {
+          if (error instanceof TokenExpiredError) throw new HttpError(`Authorization token expired at ${error.expiredAt}`, 401)
+          if (error instanceof JsonWebTokenError) throw new HttpError('Invalid authorization token', 400)
+          if (error instanceof NotBeforeError) throw new HttpError('Invalid token', 401)
+          throw error
+        })
+
+      if (decoded === undefined || decoded.scope !== TOKEN_SCOPES.INVITE_USER) {
+        throw new HttpError('Invalid token', 403)
+      }
+
+      const userData = {
+        name: decoded.name,
+        user: decoded.user,
+        role: decoded.role,
+        permissions: decoded.permissions,
+        password: request.body.password,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      const user = await services.userService().create(userData)
+      await reply.status(201).send(user)
     }
   })
 })

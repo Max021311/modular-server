@@ -2,7 +2,10 @@ import { HttpError } from '#src/common/error'
 import bcrypt from 'bcrypt'
 import type { UserTokenPayload } from '#src/service/jwt/types'
 import TOKEN_SCOPES from '#src/common/token-scopes'
-import type { UserServiceI } from './types'
+import type {
+  UserServiceI,
+  CreateUser
+} from './types'
 import type { ModuleConstructorParams } from '#src/service/types'
 
 type ConstructorParams = ModuleConstructorParams<
@@ -11,10 +14,12 @@ type ConstructorParams = ModuleConstructorParams<
 >
 
 export class UserService implements UserServiceI {
+  private readonly logger: ConstructorParams['context']['logger']
   private readonly services: ConstructorParams['context']['services']
   private readonly connectionManager: ConstructorParams['context']['connectionManager']
 
   constructor (params: ConstructorParams) {
+    this.logger = params.context.logger
     this.services = params.context.services
     this.connectionManager = params.context.connectionManager
   }
@@ -61,6 +66,30 @@ export class UserService implements UserServiceI {
       .where('user', email)
   }
 
+  async create (user: CreateUser) {
+    const db = this.db
+    const [result] = await db.table('Users')
+      .insert({
+        ...user,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning([
+        'id',
+        'name',
+        'user',
+        'role',
+        'permissions',
+        'createdAt',
+        'updatedAt'
+      ])
+    this.logger.info(result, 'User created')
+    return result
+  }
+
+  /**
+   * @deprecated
+   */
   async verifyUserToken (jwt: string) {
     const payload = await this.services.jwtService().verify(jwt)
     if (payload === undefined) { throw new HttpError('Invalid token', 401) }
