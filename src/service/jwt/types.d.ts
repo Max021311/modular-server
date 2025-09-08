@@ -16,7 +16,12 @@ export interface InviteUserPayload {
   scope: typeof TOKEN_SCOPES.INVITE_USER
 }
 
-type SignPayloads = UserTokenPayload | InviteUserPayload
+export interface InviteStudentPayload {
+  email: string,
+  scope: typeof TOKEN_SCOPES.INVITE_STUDENT
+}
+
+type SignPayloads = UserTokenPayload | InviteStudentPayload | InviteUserPayload
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -26,7 +31,7 @@ declare module 'fastify' {
 
 type DecodedToken<T> = T & Jwt & JwtPayload
 
-export type DecodedTokens = DecodedToken<UserTokenPayload> | DecodedToken<InviteUserPayload> | undefined
+export type DecodedTokens = DecodedToken<UserTokenPayload> | DecodedToken<InviteStudentPayload> | DecodedToken<InviteUserPayload> | undefined
 export interface JwtServiceI {
   sign (payload: SignPayloads, expiresIn: string = '24h'): Promise<string>
   verify (token: string): Promise<DecodedTokens>

@@ -143,7 +143,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       const email = request.body.email
       const token = await services.jwtService().sign({
         email,
-        scope: TOKEN_SCOPES.INVITE_USER
+        scope: TOKEN_SCOPES.INVITE_STUDENT
       })
       await services.emailService().sendInviteStudentEmail({
         email,
@@ -192,7 +192,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
           throw error
         })
 
-      if (decoded === undefined || decoded.scope !== TOKEN_SCOPES.INVITE_USER) {
+      if (decoded === undefined || decoded.scope !== TOKEN_SCOPES.INVITE_STUDENT) {
         throw new HttpError('Invalid token', 403)
       }
 
