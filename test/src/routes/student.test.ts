@@ -39,6 +39,7 @@ describe('Students API', () => {
         id: user.id,
         name: user.name,
         user: user.user,
+        role: user.role,
         permissions: user.permissions,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -56,6 +57,7 @@ describe('Students API', () => {
           email
         }
       })
+      console.log(res.payload)
       expect(res.statusCode).toBe(204)
     })
   })
@@ -69,7 +71,7 @@ describe('Students API', () => {
       
       const inviteToken = await jwtService.sign({
         email,
-        scope: 'invite-user'
+        scope: 'invite-student'
       })
 
       const studentData = {
@@ -108,6 +110,7 @@ describe('Students API', () => {
         id: user.id,
         name: user.name,
         user: user.user,
+        role: user.role,
         permissions: user.permissions,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -167,6 +170,7 @@ describe('Students API', () => {
         id: user.id,
         name: user.name,
         user: user.user,
+        role: user.role,
         permissions: user.permissions,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -209,6 +213,7 @@ describe('Students API', () => {
         id: user.id,
         name: user.name,
         user: user.user,
+        role: user.role,
         permissions: user.permissions,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -257,6 +262,7 @@ describe('Students API', () => {
         id: user.id,
         name: user.name,
         user: user.user,
+        role: user.role,
         permissions: user.permissions,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -304,6 +310,7 @@ describe('Students API', () => {
         id: user.id,
         name: user.name,
         user: user.user,
+        role: user.role,
         permissions: user.permissions,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -340,6 +347,7 @@ describe('Students API', () => {
         id: user.id,
         name: user.name,
         user: user.user,
+        role: user.role,
         permissions: user.permissions,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,

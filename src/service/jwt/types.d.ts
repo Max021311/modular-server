@@ -1,10 +1,12 @@
 import type { JwtPayload, Jwt } from 'jsonwebtoken'
 import type TOKEN_SCOPES from '#src/common/token-scopes'
+import type { Roles } from '#src/common/permissions'
 
 export interface UserTokenPayload {
   id: number
   name: string
   user: string
+  role: keyof Roles
   permissions: string[]
   createdAt: Date,
   updatedAt: Date
@@ -12,7 +14,7 @@ export interface UserTokenPayload {
 }
 
 export interface InviteUserPayload {
-  email: string,
+  user: string,
   scope: typeof TOKEN_SCOPES.INVITE_USER
 }
 
@@ -22,12 +24,6 @@ export interface InviteStudentPayload {
 }
 
 type SignPayloads = UserTokenPayload | InviteStudentPayload | InviteUserPayload
-
-declare module 'fastify' {
-  interface FastifyRequest {
-    user: UserTokenPayload
-  }
-}
 
 type DecodedToken<T> = T & Jwt & JwtPayload
 

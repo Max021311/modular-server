@@ -6,8 +6,9 @@ import { FastifyPluginAsync } from 'fastify'
 import { HttpError } from '#src/common/error'
 import { TokenExpiredError, JsonWebTokenError, NotBeforeError } from 'jsonwebtoken'
 import { fastifyErrorSchema } from '#src/common/schemas'
-import verifyUserToken from '#src/prehandlers/verify-user-token'
 import { orderQueryToOrder } from '#src/common/order-query'
+import buildVerifyUserToken from '#src/prehandlers/verify-user-token'
+import { PERMISSIONS } from '#src/common/permissions'
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -129,6 +130,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'POST',
     url: '/invite',
     schema: {
+      description: `Endpoint to invite a new student. This endpoint require the user permission \`${PERMISSIONS.INVITE_STUDENT}\``,
       tags: ['Students'],
       body: inviteBodySchema,
       response: {
@@ -137,7 +139,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         } as const satisfies JSONSchema
       }
     },
-    preHandler: verifyUserToken,
+    preHandler: buildVerifyUserToken([PERMISSIONS.INVITE_STUDENT]),
     async handler (request, reply) {
       const services = request.server.services
       const email = request.body.email
@@ -216,6 +218,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'GET',
     url: '/',
     schema: {
+      description: `Endpoint to get students with pagination. This endpoint require the user permission \`${PERMISSIONS.VIEW_STUDENT}\``,
       tags: ['Students'],
       headers: {
         type: 'object',
@@ -238,7 +241,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         } as const satisfies JSONSchema
       }
     },
-    preHandler: verifyUserToken,
+    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_STUDENT]),
     async handler (request, reply) {
       const services = request.server.services
       const { limit = 50, offset = 0, order, includeCareer } = request.query
@@ -277,6 +280,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'GET',
     url: '/:id',
     schema: {
+      description: `Endpoint to get a students data. This endpoint require the user permission \`${PERMISSIONS.VIEW_STUDENT}\``,
       tags: ['Students'],
       querystring: {
         type: 'object',
@@ -304,7 +308,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         404: fastifyErrorSchema
       }
     },
-    preHandler: verifyUserToken,
+    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_STUDENT]),
     async handler (request, reply) {
       const services = request.server.services
       const { id } = request.params
@@ -336,6 +340,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'PATCH',
     url: '/:id',
     schema: {
+      description: `Endpoint to edit student data. This endpoint require the user permission \`${PERMISSIONS.EDIT_STUDENT}\``,
       tags: ['Students'],
       headers: {
         type: 'object',
@@ -358,7 +363,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         } as const satisfies JSONSchema
       }
     },
-    preHandler: verifyUserToken,
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_STUDENT]),
     async handler (request, reply) {
       const services = request.server.services
       const { id } = request.params

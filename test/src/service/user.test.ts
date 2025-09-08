@@ -143,7 +143,7 @@ describe('UserService', () => {
 
       const result = await userService.getById(1)
 
-      expect(hoisted.mockQueryBuilder.select).toHaveBeenCalledWith('id', 'name', 'user', 'permissions', 'createdAt', 'updatedAt')
+      expect(hoisted.mockQueryBuilder.select).toHaveBeenCalledWith('id', 'name', 'user', 'role', 'permissions', 'createdAt', 'updatedAt')
       expect(hoisted.mockQueryBuilder.first).toHaveBeenCalled()
       expect(hoisted.mockQueryBuilder.where).toHaveBeenCalledWith('id', 1)
       expect(result).toEqual(mockUser)
@@ -182,7 +182,7 @@ describe('UserService', () => {
 
       const result = await userService.getByEmail('test@example.com')
 
-      expect(hoisted.mockQueryBuilder.select).toHaveBeenCalledWith('id', 'name', 'user', 'permissions', 'createdAt', 'updatedAt')
+      expect(hoisted.mockQueryBuilder.select).toHaveBeenCalledWith('id', 'name', 'user', 'role', 'permissions', 'createdAt', 'updatedAt')
       expect(hoisted.mockQueryBuilder.first).toHaveBeenCalled()
       expect(hoisted.mockQueryBuilder.where).toHaveBeenCalledWith('user', 'test@example.com')
       expect(result).toEqual(mockUser)

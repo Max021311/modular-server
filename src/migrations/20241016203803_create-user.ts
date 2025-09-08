@@ -9,6 +9,7 @@ export async function up (knex: Knex): Promise<void> {
         indexName: 'Users_user_unique'
       }).notNullable()
       table.string('password').notNullable()
+      table.enum('role', ['admin', 'member', 'base']).notNullable().defaultTo('base')
       table.specificType('permissions', 'text[]').notNullable()
       table.timestamp('createdAt').notNullable()
       table.timestamp('updatedAt').notNullable()

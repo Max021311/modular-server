@@ -24,7 +24,7 @@ export class UserService implements UserServiceI {
   }
 
   private users () {
-    return this.db.table('Users').select('id', 'name', 'user', 'permissions', 'createdAt', 'updatedAt')
+    return this.db.table('Users').select('id', 'name', 'user', 'role', 'permissions', 'createdAt', 'updatedAt')
   }
 
   /**
@@ -41,6 +41,7 @@ export class UserService implements UserServiceI {
       id: user.id,
       name: user.name,
       user: user.user,
+      role: user.role,
       permissions: user.permissions,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -64,6 +65,8 @@ export class UserService implements UserServiceI {
     const payload = await this.services.jwtService().verify(jwt)
     if (payload === undefined) { throw new HttpError('Invalid token', 401) }
     if (payload.scope !== TOKEN_SCOPES.USER) { throw new HttpError('Invalid token scope', 401) }
+    const user = await this.getById(payload.id)
+    if (user === undefined) throw new HttpError('Unauthorized', 401)
     return payload as UserTokenPayload
   }
 }

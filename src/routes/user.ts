@@ -1,7 +1,9 @@
 import fp from 'fastify-plugin'
 import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts'
 import { JSONSchema } from 'json-schema-to-ts'
-import verifyUserToken from '../prehandlers/verify-user-token'
+import TOKEN_SCOPES from '../common/token-scopes'
+import buildVerifyUserToken from '../prehandlers/verify-user-token'
+import { PERMISSIONS } from '#src/common/permissions'
 
 export default fp(async function RoutesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -56,7 +58,7 @@ export default fp(async function RoutesPlugin (fastify) {
         required: ['authorization']
       } as const satisfies JSONSchema
     },
-    preHandler: verifyUserToken,
+    preHandler: buildVerifyUserToken([]),
     handler (request, reply) {
       server.log.info(request.user, 'User verified')
       reply.status(200).send('ok')

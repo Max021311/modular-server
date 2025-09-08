@@ -3,6 +3,7 @@ import { User, CreateUser } from '#src/types/user'
 import { faker } from '@faker-js/faker'
 import connectionManager from '#src/common/bd'
 import bcrypt from 'bcrypt'
+import { Roles } from '#src/common/permissions'
 
 class UserFactory extends Factory<CreateUser, null, User> {
 }
@@ -22,6 +23,7 @@ export const userFactory = UserFactory.define(({ onCreate }) => {
   return {
     user: faker.internet.email(),
     name: faker.person.fullName(),
+    role: 'admin' as keyof Roles,
     password: faker.string.alphanumeric(10),
     permissions: [],
     createdAt: new Date(),

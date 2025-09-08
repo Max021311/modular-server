@@ -1,8 +1,11 @@
+import { Roles } from '#src/common/permissions'
+
 export interface User {
   id: number
   name: string
   user: string
   password: string
+  role: keyof Roles
   permissions: string[]
   createdAt: Date
   updatedAt: Date
