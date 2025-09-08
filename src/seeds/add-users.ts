@@ -11,6 +11,7 @@ export async function seed (knex: Knex): Promise<void> {
     {
       name: faker.person.fullName(),
       user: 'example@example.com',
+      role: 'admin',
       password,
       permissions: ['READ', 'CREATE', 'DELETE', 'UPDATE'],
       createdAt: new Date(),

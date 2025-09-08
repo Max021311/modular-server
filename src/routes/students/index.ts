@@ -149,7 +149,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       })
       await services.emailService().sendInviteStudentEmail({
         email,
-        completionUrl: `${config.webUrl}/invite?${token}`
+        completionUrl: `${config.webUrl}/invite-student?${token}`
       })
       await reply.status(204).send(null)
     }

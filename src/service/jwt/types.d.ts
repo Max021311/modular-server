@@ -14,7 +14,10 @@ export interface UserTokenPayload {
 }
 
 export interface InviteUserPayload {
-  user: string,
+  name: string
+  user: string
+  role: keyof Roles
+  permissions: string[]
   scope: typeof TOKEN_SCOPES.INVITE_USER
 }
 
