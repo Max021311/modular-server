@@ -39,7 +39,10 @@ export default fp(async function RoutesPlugin (fastify) {
       },
       permissions: {
         type: 'array',
-        items: { type: 'string' }
+        items: {
+          type: 'string',
+          enum: Object.values(PERMISSIONS)
+        }
       }
     },
     required: ['name', 'user', 'role', 'permissions']
