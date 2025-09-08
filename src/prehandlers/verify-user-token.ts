@@ -2,14 +2,8 @@ import { type preHandlerAsyncHookHandler } from 'fastify'
 import { HttpError } from '../common/error'
 import { TokenExpiredError, JsonWebTokenError, NotBeforeError } from 'jsonwebtoken'
 import TOKEN_SCOPES from '#src/common/token-scopes'
-import { DEFAULT_ROLE_PERMISSIONS, type PERMISSIONS, type Roles } from '#src/common/permissions'
-import { UserWithoutPassword } from '#src/service/user/types'
-
-function loadPermissions (user: UserWithoutPassword) : PERMISSIONS[] {
-  const role: keyof Roles = user?.role ?? 'base'
-  const extraPermissions = DEFAULT_ROLE_PERMISSIONS[role]
-  return [...(user?.permissions ?? []), ...extraPermissions]
-}
+import { type PERMISSIONS } from '#src/common/permissions'
+import loadPermissions from '#src/common/load-permissions'
 
 function targetContains (arr: string[], target: string[]): boolean {
   return target.every(value => arr.includes(value))

@@ -1,13 +1,13 @@
 import type { JwtPayload, Jwt } from 'jsonwebtoken'
 import type TOKEN_SCOPES from '#src/common/token-scopes'
-import type { Roles } from '#src/common/permissions'
+import type { Roles, PERMISSIONS } from '#src/common/permissions'
 
 export interface UserTokenPayload {
   id: number
   name: string
   user: string
   role: keyof Roles
-  permissions: string[]
+  permissions: PERMISSIONS[]
   createdAt: Date,
   updatedAt: Date
   scope: typeof TOKEN_SCOPES.USER
@@ -17,7 +17,7 @@ export interface InviteUserPayload {
   name: string
   user: string
   role: keyof Roles
-  permissions: string[]
+  permissions: PERMISSIONS[]
   scope: typeof TOKEN_SCOPES.INVITE_USER
 }
 

@@ -1,8 +1,6 @@
-import { User, CreateUser } from '#src/types/user'
+import type { CreateUser, UserWithoutPassword } from '#src/types/user'
 
 export { CreateUser } from '#src/types/user'
-
-type UserWithoutPassword = Pick<User, 'id'|'name'|'user'|'permissions'|'createdAt'|'updatedAt'>
 
 export interface UserServiceI {
   login (email: string, password: string): Promise<string>

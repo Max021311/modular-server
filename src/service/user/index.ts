@@ -7,6 +7,7 @@ import type {
   CreateUser
 } from './types'
 import type { ModuleConstructorParams } from '#src/service/types'
+import loadPermissions from '#src/common/load-permissions'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger'|'services'|'connectionManager',
@@ -47,7 +48,7 @@ export class UserService implements UserServiceI {
       name: user.name,
       user: user.user,
       role: user.role,
-      permissions: user.permissions,
+      permissions: loadPermissions(user),
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       scope: 'user'
