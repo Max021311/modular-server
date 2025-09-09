@@ -4,8 +4,8 @@ export async function up (knex: Knex): Promise<void> {
   return knex.schema
     .createTable('Careers', function (table) {
       table.increments('id').primary().notNullable()
-      table.string('name').unique().notNullable()
-      table.string('slug').unique().notNullable()
+      table.string('name').notNullable()
+      table.string('slug').unique().notNullable().index()
       table.timestamp('createdAt').notNullable()
       table.timestamp('updatedAt').notNullable()
     })
