@@ -8,7 +8,8 @@ export interface Student {
   telephone: string
   createdAt: Date
   updatedAt: Date
+  searchVector: string
 }
 
-export type CreateStudent = Omit<Student, 'id'>
-export type UpdateStudent = Partial<Omit<Student, 'id'|'createdAt'>>
+export type CreateStudent = Omit<Student, 'id', 'searchVector'>
+export type UpdateStudent = Partial<Omit<Student, 'id'|'createdAt'|'searchVector'>>
