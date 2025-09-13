@@ -18,13 +18,8 @@ export async function seed (knex: Knex): Promise<void> {
   })
   await knex('Students').insert([
     { // ID: 1
-      name: faker.person.fullName(),
-      user: 'example@example.com',
-      role: 'admin',
-      password,
-      permissions: ['READ', 'CREATE', 'DELETE', 'UPDATE'],
-      createdAt: new Date(),
-      updatedAt: new Date()
+      ...createStudent(),
+      email: 'example@example.com'
     }
   ])
   const students = Array.from({ length: 50 }).map(() => createStudent())
