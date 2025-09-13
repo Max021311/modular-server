@@ -9,6 +9,8 @@ import type {
   FindByIdOpts
 } from './types'
 import type { ModuleConstructorParams } from '#src/service/types'
+import { HttpError } from '#src/common/error'
+import bcrypt from 'bcrypt'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger'|'services'|'connectionManager',
@@ -58,6 +60,30 @@ export class StudentService implements StudentServiceI {
         db.ref('createdAt').withSchema('Careers').as('career_createdAt'),
         db.ref('updatedAt').withSchema('Careers').as('career_updatedAt')
       )
+  }
+
+  async login (email: string, password: string): Promise<string> {
+    const db = this.db
+    const user = await this.selectQuery
+      .select(db.ref('password').withSchema('Students'))
+      .first()
+      .where('email', email)
+    if (!user) { throw new HttpError('Wrong user or password', 401) }
+
+    const result = await bcrypt.compare(password, user.password)
+    if (!result) { throw new HttpError('Wrong user or password', 401) }
+
+    return await this.services.jwtService().sign({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      code: user.code,
+      telephone: user.telephone,
+      careerId: user.careerId,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      scope: 'student'
+    })
   }
 
   async findAndCount (params: FindAndCountParams) {

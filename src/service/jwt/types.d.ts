@@ -13,6 +13,18 @@ export interface UserTokenPayload {
   scope: typeof TOKEN_SCOPES.USER
 }
 
+export interface StudentTokenPayload {
+  id: number
+  name: string
+  code: string
+  careerId: number
+  email: string
+  telephone: string
+  createdAt: Date
+  updatedAt: Date
+  scope: typeof TOKEN_SCOPES.STUDENT
+}
+
 export interface InviteUserPayload {
   name: string
   user: string
@@ -26,7 +38,7 @@ export interface InviteStudentPayload {
   scope: typeof TOKEN_SCOPES.INVITE_STUDENT
 }
 
-type SignPayloads = UserTokenPayload | InviteStudentPayload | InviteUserPayload
+type SignPayloads = UserTokenPayload | StudentTokenPayload | InviteStudentPayload | InviteUserPayload
 
 type DecodedToken<T> = T & Jwt & JwtPayload
 

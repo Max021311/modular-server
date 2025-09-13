@@ -5,7 +5,7 @@ export async function seed (knex: Knex): Promise<void> {
 
   await knex('Careers').insert([
     { // ID: 1
-      name: 'Ing. Informática',
+      name: 'Ing. informática',
       slug: 'INNI',
       createdAt: new Date(),
       updatedAt: new Date()

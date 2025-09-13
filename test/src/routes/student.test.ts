@@ -26,6 +26,34 @@ describe('Students API', () => {
     await app.close()
   })
 
+  describe('POST /students/auth', () => {
+    const PATH = '/students/auth'
+    const METHOD = 'POST'
+    
+    it('Success login student with valid credentials', async () => {
+      const career = await careerFactory.create()
+      const password = faker.string.alphanumeric(10)
+      const student = await studentFactory.create({
+        careerId: career.id,
+        password
+      })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        payload: {
+          email: student.email,
+          password
+        }
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body).toHaveProperty('token')
+      expect(typeof body.token).toBe('string')
+    })
+  })
+
   describe('POST /students/invite', () => {
     const PATH = '/students/invite'
     const METHOD = 'POST'

@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 import { faker } from '@faker-js/faker'
 
 export async function seed (knex: Knex): Promise<void> {
-  await knex('Users').del()
+  await knex('Students').del()
 
   const password = await bcrypt.hash('loremipsum', 13)
   const createStudent = () => ({
