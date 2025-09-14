@@ -216,4 +216,12 @@ export class StudentService implements StudentServiceI {
         : undefined
     }
   }
+
+  async findByEmail (email: string): Promise<StudentWithouPassword | null> {
+    const result = await this.selectQuery
+      .where('email', '=', email)
+      .first()
+
+    return result ?? null
+  }
 }

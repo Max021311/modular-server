@@ -29,6 +29,7 @@ export interface StudentServiceI {
   findAndCount (params: FindAndCountParams): Promise<{ total: number, records: StudentWithCareer[] }>
   updateStudent(id: number, studentData: UpdateStudent): Promise<StudentWithouPassword>
   findById(id: number, opts?: FindByIdOpts): Promise<StudentWithCareer | null>
+  findByEmail(email: string): Promise<StudentWithouPassword | null>
 }
 
 export interface StudentServiceConfigI {

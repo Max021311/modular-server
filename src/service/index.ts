@@ -8,7 +8,7 @@ import { StudentService } from './student'
 import { BcryptService } from './bcrypt'
 import { TemplateRender } from './template-render/'
 import { ConnectionManager } from '#src/common/bd'
-import { config } from 'process'
+import { CareerService } from './career'
 
 interface GetServicesParams {
   logger: Logger
@@ -49,6 +49,9 @@ export function getServices (params: GetServicesParams): Services {
     context
   })
   context.services.templateRender = lazyLoad((p) => new TemplateRender(p), {
+    context
+  })
+  context.services.careerService = lazyLoad((p) => new CareerService(p), {
     context
   })
   return context.services
