@@ -84,7 +84,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     properties: {
       order: {
         type: 'string',
-        enum: ['Students.createdAt', '-Students.createdAt'],
+        enum: ['Students.createdAt', '-Students.createdAt', 'Students.id', '-Students.id'],
         description: "Order by the field name. A minus(-) means that we'll order the file collections in descending order.",
         default: '-Students.createdAt'
       },
@@ -99,7 +99,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         minimum: 0,
         default: 0
       },
-      includeCareer: { type: 'boolean', description: 'Include the field `career` if is enabled' }
+      includeCareer: { type: 'boolean', description: 'Include the field `career` if is enabled' },
+      search: { type: 'string' }
     }
   } as const satisfies JSONSchema
 
@@ -282,13 +283,20 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_STUDENT]),
     async handler (request, reply) {
       const services = request.server.services
-      const { limit = 50, offset = 0, order, includeCareer } = request.query
+      const {
+        limit = 50,
+        offset = 0,
+        order,
+        includeCareer,
+        search
+      } = request.query
 
       const result = await services.studentService().findAndCount({
         limit,
         offset,
         order: orderQueryToOrder(order) ?? undefined,
-        includeCareer
+        includeCareer,
+        search
       })
 
       const records = result.records.map(record => {
@@ -343,6 +351,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       } as const satisfies JSONSchema,
       response: {
         200: studentWithCareerResponseSchema,
+        400: fastifyErrorSchema,
         404: fastifyErrorSchema
       }
     },
@@ -354,6 +363,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       const student = await services.studentService().findById(id, {
         includeCareer: request.query.includeCareer
       })
+      console.log({ student, id })
 
       if (!student) {
         throw new HttpError('Student not found', 404)

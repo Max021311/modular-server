@@ -8,6 +8,7 @@ import { StudentService } from './student'
 import { BcryptService } from './bcrypt'
 import { TemplateRender } from './template-render/'
 import { ConnectionManager } from '#src/common/bd'
+import { config } from 'process'
 
 interface GetServicesParams {
   logger: Logger
@@ -39,7 +40,10 @@ export function getServices (params: GetServicesParams): Services {
     }
   })
   context.services.studentService = lazyLoad((p) => new StudentService(p), {
-    context
+    context,
+    config: {
+      textSearch: configuration.textSearch
+    }
   })
   context.services.bcryptService = lazyLoad((p) => new BcryptService(p), {
     context

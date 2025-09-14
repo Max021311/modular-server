@@ -15,7 +15,8 @@ export interface FindAndCountParams {
   limit: number
   offset: number
   order?: [`Students.${keyof Student}`, 'asc' | 'desc']
-  includeCareer?: boolean
+  includeCareer?: boolean,
+  search?: string
 }
 
 export interface FindByIdOpts {
@@ -28,4 +29,10 @@ export interface StudentServiceI {
   findAndCount (params: FindAndCountParams): Promise<{ total: number, records: StudentWithCareer[] }>
   updateStudent(id: number, studentData: UpdateStudent): Promise<StudentWithouPassword>
   findById(id: number, opts?: FindByIdOpts): Promise<StudentWithCareer | null>
+}
+
+export interface StudentServiceConfigI {
+  textSearch: {
+    language: string
+  }
 }

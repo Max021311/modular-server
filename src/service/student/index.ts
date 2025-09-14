@@ -1,5 +1,6 @@
 import type {
   StudentServiceI,
+  StudentServiceConfigI,
   StudentWithouPassword,
   StudentWithCareer,
   CreateStudent,
@@ -13,18 +14,21 @@ import bcrypt from 'bcrypt'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger'|'services'|'connectionManager',
-  'jwtService'
+  'jwtService',
+  StudentServiceConfigI
 >
 
 export class StudentService implements StudentServiceI {
   private readonly logger: ConstructorParams['context']['logger']
   private readonly services: ConstructorParams['context']['services']
   private readonly connectionManager: ConstructorParams['context']['connectionManager']
+  private readonly config: ConstructorParams['config']
 
   constructor (params: ConstructorParams) {
     this.logger = params.context.logger
     this.connectionManager = params.context.connectionManager
     this.services = params.context.services
+    this.config = params.config
   }
 
   private get db () {
@@ -83,20 +87,30 @@ export class StudentService implements StudentServiceI {
   }
 
   async findAndCount (params: FindAndCountParams) {
-    const { limit, offset, order, includeCareer } = params
+    const { limit, offset, order, includeCareer, search } = params
     const db = this.db
+    let countQuery = db.table('Students')
+      .count({ count: '*' }).first()
     const baseSelectQuery = this.selectQuery
       .limit(limit)
       .offset(offset)
+
     let selectQuery: typeof this.selectQuery | ReturnType<typeof this.applyCareerJoin> = baseSelectQuery
+
+    if (order) selectQuery = selectQuery.orderBy([{ column: order[0], order: order[1] }, { column: 'Students.id', order: order[1] }])
+
+    if (search) {
+      const { language } = this.config.textSearch
+      selectQuery = selectQuery
+        .whereRaw('search_vector @@ plainto_tsquery(?, ?)', [language, search])
+      countQuery = countQuery
+        .whereRaw('search_vector @@ plainto_tsquery(?, ?)', [language, search])
+    }
 
     if (includeCareer === true) selectQuery = this.applyCareerJoin(selectQuery)
 
-    if (order) selectQuery = selectQuery.orderBy(order[0], order[1])
-
     const [total, records] = await Promise.all([
-      db.table('Students')
-        .count({ count: '*' }).first(),
+      countQuery,
       selectQuery
     ])
     return {
@@ -176,7 +190,7 @@ export class StudentService implements StudentServiceI {
 
     if (includeCareer) selectQuery = this.applyCareerJoin(selectQuery)
 
-    const result = await selectQuery.first()
+    const result = await selectQuery.where('Students.id', '=', id).first()
 
     if (!result) {
       return null

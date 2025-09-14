@@ -188,6 +188,67 @@ describe('Students API', () => {
       expect(record).toHaveProperty('updatedAt')
     })
 
+    it('Success get student with search query param', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const career = await careerFactory.create({})
+      const [student] = await Promise.all([
+        studentFactory.create({ careerId: career.id }),
+        studentFactory.create({ careerId: career.id }),
+        studentFactory.create({ careerId: career.id }),
+        studentFactory.create({ careerId: career.id }),
+        studentFactory.create({ careerId: career.id }),
+      ])
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          includeCareer: 'true',
+          search: student.name
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body).toHaveProperty('total')
+      expect(body).toHaveProperty('records')
+      expect(body.total).toBe(1)
+      expect(body.records).toBeInstanceOf(Array)
+
+      const record = body.records[0]
+      expect(record).toHaveProperty('id')
+      expect(record).toHaveProperty('name')
+      expect(record).toHaveProperty('code')
+      expect(record).toHaveProperty('careerId')
+      expect(record).toHaveProperty('career', {
+        ...career,
+        createdAt: career.createdAt.toISOString(),
+        updatedAt: career.updatedAt.toISOString()
+      })
+      expect(record).toHaveProperty('email')
+      expect(record).toHaveProperty('telephone')
+      expect(record).toHaveProperty('createdAt')
+      expect(record).toHaveProperty('updatedAt')
+    })
+
     it('Success get students with limit parameter', async () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
