@@ -11,5 +11,5 @@ export interface Student {
   searchVector: string
 }
 
-export type CreateStudent = Omit<Student, 'id', 'searchVector'>
+export type CreateStudent = Omit<Student, 'id'|'searchVector'>
 export type UpdateStudent = Partial<Omit<Student, 'id'|'createdAt'|'searchVector'>>

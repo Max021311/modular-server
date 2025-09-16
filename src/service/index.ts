@@ -7,6 +7,7 @@ import { EmailService } from './email'
 import { StudentService } from './student'
 import { BcryptService } from './bcrypt'
 import { TemplateRender } from './template-render/'
+import { DepartmentService } from './department/'
 import { ConnectionManager } from '#src/common/bd'
 import { CareerService } from './career'
 
@@ -53,6 +54,12 @@ export function getServices (params: GetServicesParams): Services {
   })
   context.services.careerService = lazyLoad((p) => new CareerService(p), {
     context
+  })
+  context.services.departmentService = lazyLoad((p) => new DepartmentService(p), {
+    context,
+    config: {
+      textSearch: configuration.textSearch
+    }
   })
   return context.services
 }
