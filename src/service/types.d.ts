@@ -6,6 +6,7 @@ import type { BcryptServiceI } from '#src/service/bcrypt/types'
 import type { CareerServiceI } from '#src/service/career/types'
 import type { TemplateRenderI } from '#src/service/template-render/types'
 import type { DepartmentServiceI } from '#src/service/department/types'
+import type { CycleServiceI } from '#src/service/cycle/types'
 import type { BaseLogger } from 'pino'
 import type { ConnectionManager } from '#src/common/bd'
 
@@ -20,6 +21,7 @@ export interface Services {
   templateRender: () => TemplateRenderI
   careerService: () => CareerServiceI
   departmentService: () => DepartmentServiceI
+  cycleService: () => CycleServiceI
 }
 
 export interface ApplicationContext <T extends (keyof Services | unknown) = keyof Services> {
