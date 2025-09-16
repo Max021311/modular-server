@@ -32,4 +32,3 @@ export class BcryptService implements BcryptServiceI {
     }
   }
 }
-

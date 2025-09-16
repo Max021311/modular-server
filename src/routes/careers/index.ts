@@ -46,4 +46,3 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
 }
 
 export default routesPlugin
-
