@@ -4,7 +4,7 @@ export interface Department {
   address: string
   phone: string
   email: string
-  chiefName: string,
+  chiefName: string
   createdAt: Date
   updatedAt: Date
   searchVector: string
