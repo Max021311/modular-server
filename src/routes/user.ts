@@ -62,6 +62,7 @@ export default fp(async function RoutesPlugin (fastify) {
     method: 'POST',
     url: '/user/auth',
     schema: {
+      description: 'Allow log in as an administrative user',
       tags: ['Users'],
       body: loginBodySchema,
       response: {
