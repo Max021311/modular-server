@@ -637,8 +637,8 @@ describe('Departments API', () => {
     })
   })
 
-  describe('PATCH /departments/:id', () => {
-    const METHOD = 'PATCH'
+  describe('PUT /departments/:id', () => {
+    const METHOD = 'PUT'
     const PATH = '/departments/:id'
     
     it('Success update department with all fields', async () => {
@@ -693,51 +693,6 @@ describe('Departments API', () => {
       expect(new Date(body.updatedAt).getTime()).toBeGreaterThan(department.updatedAt.getTime())
     })
 
-    it('Success update department with partial fields', async () => {
-      const password = faker.string.alphanumeric(10)
-      const user = await userFactory.create({
-        password,
-        role: 'admin'
-      })
-      
-      const token = await jwtService.sign({
-        id: user.id,
-        name: user.name,
-        user: user.user,
-        role: user.role,
-        permissions: user.permissions,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-        scope: 'user'
-      })
-
-      const department = await departmentFactory.create()
-      
-      const updateData = {
-        name: faker.company.name(),
-        email: faker.internet.email()
-        // Only updating name and email
-      }
-
-      const res = await app.inject({
-        url: PATH.replace(':id', department.id.toString()),
-        method: METHOD,
-        headers: {
-          authorization: `Bearer ${token}`
-        },
-        payload: updateData
-      })
-      
-      expect(res.statusCode).toBe(200)
-      const body = res.json()
-      expect(body).toHaveProperty('id', department.id)
-      expect(body).toHaveProperty('name', updateData.name)
-      expect(body).toHaveProperty('address', department.address) // Unchanged
-      expect(body).toHaveProperty('phone', department.phone) // Unchanged
-      expect(body).toHaveProperty('email', updateData.email)
-      expect(body).toHaveProperty('chiefName', department.chiefName) // Unchanged
-    })
-
     it('Returns 404 when department not found', async () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
@@ -758,7 +713,11 @@ describe('Departments API', () => {
 
       const nonExistentId = 99999
       const updateData = {
-        name: faker.company.name()
+        name: faker.company.name(),
+        address: faker.location.streetAddress(),
+        phone: faker.phone.number(),
+        email: faker.internet.email(),
+        chiefName: faker.person.fullName()
       }
 
       const res = await app.inject({
@@ -815,7 +774,11 @@ describe('Departments API', () => {
       const department = await departmentFactory.create()
       
       const updateData = {
-        name: faker.company.name()
+        name: faker.company.name(),
+        address: faker.location.streetAddress(),
+        phone: faker.phone.number(),
+        email: faker.internet.email(),
+        chiefName: faker.person.fullName()
       }
 
       const res = await app.inject({
@@ -851,7 +814,11 @@ describe('Departments API', () => {
       const department = await departmentFactory.create()
       
       const updateData = {
-        name: faker.company.name()
+        name: faker.company.name(),
+        address: faker.location.streetAddress(),
+        phone: faker.phone.number(),
+        email: faker.internet.email(),
+        chiefName: faker.person.fullName()
       }
 
       const res = await app.inject({
@@ -885,7 +852,11 @@ describe('Departments API', () => {
       })
 
       const updateData = {
-        name: faker.company.name()
+        name: faker.company.name(),
+        address: faker.location.streetAddress(),
+        phone: faker.phone.number(),
+        email: faker.internet.email(),
+        chiefName: faker.person.fullName()
       }
 
       const res = await app.inject({

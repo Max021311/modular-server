@@ -46,6 +46,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       email: { type: 'string', format: 'email' },
       chiefName: { type: 'string' }
     },
+    required: ['name', 'address', 'phone', 'email', 'chiefName'],
     additionalProperties: false
   } as const satisfies JSONSchema
 
@@ -210,7 +211,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   })
 
   server.route({
-    method: 'PATCH',
+    method: 'PUT',
     url: '/:id',
     schema: {
       description: `Endpoint to update a department by ID. This endpoint require the user permission \`${PERMISSIONS.EDIT_DEPARTMENT}\``,
