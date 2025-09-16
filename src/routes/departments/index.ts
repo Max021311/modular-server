@@ -6,6 +6,7 @@ import buildVerifyUserToken from '#src/prehandlers/verify-user-token'
 import { PERMISSIONS } from '#src/common/permissions'
 import { HttpError } from '#src/common/error'
 import { fastifyErrorSchema } from '#src/common/schemas'
+import { DatabaseError } from 'pg'
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -192,7 +193,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       body: createDepartmentBodySchema,
       response: {
         201: departmentResponseSchema,
-        400: fastifyErrorSchema
+        400: fastifyErrorSchema,
+        409: fastifyErrorSchema
       }
     },
     preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_DEPARTMENT]),
@@ -200,13 +202,20 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       const services = request.server.services
       const departmentData = request.body
 
-      const department = await services.departmentService().create(departmentData)
+      try {
+        const department = await services.departmentService().create(departmentData)
 
-      await reply.status(201).send({
-        ...department,
-        createdAt: department.createdAt.toISOString(),
-        updatedAt: department.updatedAt.toISOString()
-      })
+        await reply.status(201).send({
+          ...department,
+          createdAt: department.createdAt.toISOString(),
+          updatedAt: department.updatedAt.toISOString()
+        })
+      } catch (error) {
+        if (error instanceof DatabaseError && error.code === '23505') {
+          throw new HttpError('Conflict', 409)
+        }
+        throw error
+      }
     }
   })
 
@@ -234,7 +243,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       response: {
         200: departmentResponseSchema,
         400: fastifyErrorSchema,
-        404: fastifyErrorSchema
+        404: fastifyErrorSchema,
+        409: fastifyErrorSchema
       }
     },
     preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_DEPARTMENT]),
@@ -249,13 +259,19 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         throw new HttpError('Department not found', 404)
       }
 
-      const department = await services.departmentService().update(id, departmentData)
-
-      await reply.status(200).send({
-        ...department,
-        createdAt: department.createdAt.toISOString(),
-        updatedAt: department.updatedAt.toISOString()
-      })
+      try {
+        const department = await services.departmentService().update(id, departmentData)
+        await reply.status(200).send({
+          ...department,
+          createdAt: department.createdAt.toISOString(),
+          updatedAt: department.updatedAt.toISOString()
+        })
+      } catch (error) {
+        if (error instanceof DatabaseError && error.code === '23505') {
+          throw new HttpError('Conflict', 409)
+        }
+        throw error
+      }
     }
   })
 }
