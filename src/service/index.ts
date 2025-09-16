@@ -8,6 +8,7 @@ import { StudentService } from './student'
 import { BcryptService } from './bcrypt'
 import { TemplateRender } from './template-render/'
 import { DepartmentService } from './department/'
+import { CycleService } from './cycle/'
 import { ConnectionManager } from '#src/common/bd'
 import { CareerService } from './career'
 
@@ -60,6 +61,9 @@ export function getServices (params: GetServicesParams): Services {
     config: {
       textSearch: configuration.textSearch
     }
+  })
+  context.services.cycleService = lazyLoad((p) => new CycleService(p), {
+    context
   })
   return context.services
 }

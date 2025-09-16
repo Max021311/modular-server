@@ -11,54 +11,44 @@ import { DatabaseError } from 'pg'
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
 
-  const departmentResponseSchema = {
+  const cycleResponseSchema = {
     type: 'object',
     properties: {
       id: { type: 'integer' },
-      name: { type: 'string' },
-      address: { type: 'string' },
-      phone: { type: 'string' },
-      email: { type: 'string' },
-      chiefName: { type: 'string' },
+      slug: { type: 'string' },
+      isCurrent: { type: 'boolean' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' }
     },
-    required: ['id', 'name', 'address', 'phone', 'email', 'chiefName', 'createdAt', 'updatedAt']
+    required: ['id', 'slug', 'isCurrent', 'createdAt', 'updatedAt']
   } as const satisfies JSONSchema
 
-  const createDepartmentBodySchema = {
+  const createCycleBodySchema = {
     type: 'object',
     properties: {
-      name: { type: 'string' },
-      address: { type: 'string' },
-      phone: { type: 'string' },
-      email: { type: 'string', format: 'email' },
-      chiefName: { type: 'string' }
+      slug: { type: 'string' },
+      isCurrent: { type: 'boolean' }
     },
-    required: ['name', 'address', 'phone', 'email', 'chiefName']
+    required: ['slug', 'isCurrent']
   } as const satisfies JSONSchema
 
-  const updateDepartmentBodySchema = {
+  const updateCycleBodySchema = {
     type: 'object',
     properties: {
-      name: { type: 'string' },
-      address: { type: 'string' },
-      phone: { type: 'string' },
-      email: { type: 'string', format: 'email' },
-      chiefName: { type: 'string' }
+      slug: { type: 'string' },
+      isCurrent: { type: 'boolean' }
     },
-    required: ['name', 'address', 'phone', 'email', 'chiefName'],
     additionalProperties: false
   } as const satisfies JSONSchema
 
-  const departmentsQuerySchema = {
+  const cyclesQuerySchema = {
     type: 'object',
     properties: {
       order: {
         type: 'string',
-        enum: ['Departments.createdAt', '-Departments.createdAt', 'Departments.id', '-Departments.id'],
+        enum: ['Cycles.createdAt', '-Cycles.createdAt', 'Cycles.id', '-Cycles.id'],
         description: "Order by the field name. A minus(-) means that we'll order the file collections in descending order.",
-        default: '-Departments.createdAt'
+        default: '-Cycles.createdAt'
       },
       limit: {
         type: 'integer',
@@ -79,8 +69,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'GET',
     url: '/',
     schema: {
-      description: `Endpoint to get departments with pagination. This endpoint require the user permission \`${PERMISSIONS.VIEW_DEPARTMENT}\``,
-      tags: ['Departments'],
+      description: `Endpoint to get cycles with pagination. This endpoint require the user permission \`${PERMISSIONS.VIEW_CYCLE}\``,
+      tags: ['Cycles'],
       headers: {
         type: 'object',
         properties: {
@@ -88,7 +78,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         },
         required: ['authorization']
       } as const satisfies JSONSchema,
-      querystring: departmentsQuerySchema,
+      querystring: cyclesQuerySchema,
       response: {
         200: {
           type: 'object',
@@ -96,13 +86,13 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
             total: { type: 'integer' },
             records: {
               type: 'array',
-              items: departmentResponseSchema
+              items: cycleResponseSchema
             }
           }
         } as const satisfies JSONSchema
       }
     },
-    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_DEPARTMENT]),
+    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_CYCLE]),
     async handler (request, reply) {
       const services = request.server.services
       const {
@@ -112,7 +102,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         search
       } = request.query
 
-      const result = await services.departmentService().findAndCountAll({
+      const result = await services.cycleService().findAndCountAll({
         limit,
         offset,
         order: orderQueryToOrder(order) ?? undefined,
@@ -133,56 +123,11 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   })
 
   server.route({
-    method: 'GET',
-    url: '/:id',
-    schema: {
-      description: `Endpoint to get a department by ID. This endpoint require the user permission \`${PERMISSIONS.VIEW_DEPARTMENT}\``,
-      tags: ['Departments'],
-      headers: {
-        type: 'object',
-        properties: {
-          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
-        },
-        required: ['authorization']
-      } as const satisfies JSONSchema,
-      params: {
-        type: 'object',
-        properties: {
-          id: { type: 'integer' }
-        },
-        required: ['id']
-      } as const satisfies JSONSchema,
-      response: {
-        200: departmentResponseSchema,
-        400: fastifyErrorSchema,
-        404: fastifyErrorSchema
-      }
-    },
-    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_DEPARTMENT]),
-    async handler (request, reply) {
-      const services = request.server.services
-      const { id } = request.params
-
-      const department = await services.departmentService().findById(id)
-
-      if (!department) {
-        throw new HttpError('Department not found', 404)
-      }
-
-      await reply.status(200).send({
-        ...department,
-        createdAt: department.createdAt.toISOString(),
-        updatedAt: department.updatedAt.toISOString()
-      })
-    }
-  })
-
-  server.route({
     method: 'POST',
     url: '/',
     schema: {
-      description: `Endpoint to create a new department. This endpoint require the user permission \`${PERMISSIONS.EDIT_DEPARTMENT}\``,
-      tags: ['Departments'],
+      description: `Endpoint to create a new cycle. This endpoint require the user permission \`${PERMISSIONS.EDIT_CYCLE}\``,
+      tags: ['Cycles'],
       headers: {
         type: 'object',
         properties: {
@@ -190,25 +135,37 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         },
         required: ['authorization']
       } as const satisfies JSONSchema,
-      body: createDepartmentBodySchema,
+      body: createCycleBodySchema,
       response: {
-        201: departmentResponseSchema,
+        201: cycleResponseSchema,
         400: fastifyErrorSchema,
         409: fastifyErrorSchema
       }
     },
-    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_DEPARTMENT]),
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_CYCLE]),
     async handler (request, reply) {
       const services = request.server.services
-      const departmentData = request.body
+      const cycleData = request.body
 
       try {
-        const department = await services.departmentService().create(departmentData)
+        let cycle
+        if (cycleData.isCurrent) {
+          // If setting as current, use setCurrent which handles the transaction
+          // First create the cycle as non-current, then set it as current
+          const newCycle = await services.cycleService().create({
+            slug: cycleData.slug,
+            isCurrent: false
+          })
+          cycle = await services.cycleService().setCurrent(newCycle.id)
+        } else {
+          // Just create a non-current cycle
+          cycle = await services.cycleService().create(cycleData)
+        }
 
         await reply.status(201).send({
-          ...department,
-          createdAt: department.createdAt.toISOString(),
-          updatedAt: department.updatedAt.toISOString()
+          ...cycle,
+          createdAt: cycle.createdAt.toISOString(),
+          updatedAt: cycle.updatedAt.toISOString()
         })
       } catch (error) {
         if (error instanceof DatabaseError && error.code === '23505') {
@@ -220,11 +177,11 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   })
 
   server.route({
-    method: 'PUT',
+    method: 'PATCH',
     url: '/:id',
     schema: {
-      description: `Endpoint to update a department by ID. This endpoint require the user permission \`${PERMISSIONS.EDIT_DEPARTMENT}\``,
-      tags: ['Departments'],
+      description: `Endpoint to update a cycle by ID. This endpoint require the user permission \`${PERMISSIONS.EDIT_CYCLE}\``,
+      tags: ['Cycles'],
       headers: {
         type: 'object',
         properties: {
@@ -239,32 +196,43 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         },
         required: ['id']
       } as const satisfies JSONSchema,
-      body: updateDepartmentBodySchema,
+      body: updateCycleBodySchema,
       response: {
-        200: departmentResponseSchema,
+        200: cycleResponseSchema,
         400: fastifyErrorSchema,
         404: fastifyErrorSchema,
         409: fastifyErrorSchema
       }
     },
-    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_DEPARTMENT]),
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_CYCLE]),
     async handler (request, reply) {
       const services = request.server.services
       const { id } = request.params
-      const departmentData = request.body
+      const cycleData = request.body
 
-      // Check if department exists
-      const existingDepartment = await services.departmentService().findById(id)
-      if (!existingDepartment) {
-        throw new HttpError('Department not found', 404)
+      // Check if cycle exists
+      const existingCycle = await services.cycleService().findById(id)
+      if (!existingCycle) {
+        throw new HttpError('Cycle not found', 404)
       }
 
       try {
-        const department = await services.departmentService().update(id, departmentData)
+        let cycle
+        if (cycleData?.isCurrent) {
+          // If setting as current, first update the cycle, then use setCurrent
+          if (typeof cycleData?.slug === 'string') {
+            await services.cycleService().update(id, { slug: cycleData.slug })
+          }
+          cycle = await services.cycleService().setCurrent(id)
+        } else {
+          // Regular update
+          cycle = await services.cycleService().update(id, cycleData)
+        }
+
         await reply.status(200).send({
-          ...department,
-          createdAt: department.createdAt.toISOString(),
-          updatedAt: department.updatedAt.toISOString()
+          ...cycle,
+          createdAt: cycle.createdAt.toISOString(),
+          updatedAt: cycle.updatedAt.toISOString()
         })
       } catch (error) {
         if (error instanceof DatabaseError && error.code === '23505') {
