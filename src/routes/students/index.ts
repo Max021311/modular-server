@@ -9,6 +9,7 @@ import { fastifyErrorSchema } from '#src/common/schemas'
 import { orderQueryToOrder } from '#src/common/order-query'
 import buildVerifyUserToken from '#src/prehandlers/verify-user-token'
 import { PERMISSIONS } from '#src/common/permissions'
+import { DatabaseError } from 'pg'
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -182,13 +183,15 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     async handler (request, reply) {
       const services = request.server.services
       const email = request.body.email
+      const student = await services.studentService().findByEmail(email)
+      if (student !== null) throw new HttpError('Email already registered', 409)
       const token = await services.jwtService().sign({
         email,
         scope: TOKEN_SCOPES.INVITE_STUDENT
       })
       await services.emailService().sendInviteStudentEmail({
         email,
-        completionUrl: `${config.webUrl}/invite-student?${token}`
+        completionUrl: `${config.webUrl}/registro-alumno?token=${token}`
       })
       await reply.status(204).send(null)
     }
@@ -245,11 +248,18 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         updatedAt: new Date()
       }
 
-      const student = await services.studentService().createStudent({
-        ...studentData,
-        password: await services.bcryptService().hash(studentData.password)
-      })
-      await reply.status(201).send(student)
+      try {
+        const student = await services.studentService().createStudent({
+          ...studentData,
+          password: await services.bcryptService().hash(studentData.password)
+        })
+        await reply.status(201).send(student)
+      } catch (error) {
+        if (error instanceof DatabaseError && error.code === '23505') {
+          throw new HttpError('Conflict', 409)
+        }
+        throw error
+      }
     }
   })
 
@@ -363,7 +373,6 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       const student = await services.studentService().findById(id, {
         includeCareer: request.query.includeCareer
       })
-      console.log({ student, id })
 
       if (!student) {
         throw new HttpError('Student not found', 404)
