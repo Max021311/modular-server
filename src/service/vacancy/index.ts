@@ -17,8 +17,8 @@ type ConstructorParams = ModuleConstructorParams<
 >
 
 type Vacancy = Pick<Tables['Vacancies']['base'], 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'createdAt'|'updatedAt'>
-type CycleJoin = PrefixedPick<Tables['Cycles']['base'], 'id'|'slug'|'isCurrent', 'cycle_'>
-type DepartmentJoin = PrefixedPick<Tables['Departments']['base'], 'id'|'name', 'department_'>
+type CycleJoin = PrefixedPick<Tables['Cycles']['base'], 'id'|'slug'|'isCurrent'|'createdAt'|'updatedAt', 'cycle_'>
+type DepartmentJoin = PrefixedPick<Tables['Departments']['base'], 'id'|'name'|'address'|'phone'|'email'|'chiefName'|'createdAt'|'updatedAt', 'department_'>
 
 type VacancyWithJoins = Vacancy & AtLeastOneJoin<[CycleJoin, DepartmentJoin]>
 
@@ -57,7 +57,13 @@ export class VacancyService implements VacancyServiceI {
     return query.leftJoin('Departments', 'Vacancies.departmentId', '=', 'Departments.id')
       .select(
         db.ref('id').withSchema('Departments').as('department_id'),
-        db.ref('name').withSchema('Departments').as('department_name')
+        db.ref('name').withSchema('Departments').as('department_name'),
+        db.ref('address').withSchema('Departments').as('department_address'),
+        db.ref('phone').withSchema('Departments').as('department_phone'),
+        db.ref('email').withSchema('Departments').as('department_email'),
+        db.ref('chiefName').withSchema('Departments').as('department_chiefName'),
+        db.ref('createdAt').withSchema('Departments').as('department_createdAt'),
+        db.ref('updatedAt').withSchema('Departments').as('department_updatedAt')
       )
   }
 
@@ -66,7 +72,9 @@ export class VacancyService implements VacancyServiceI {
       .select(
         db.ref('id').withSchema('Cycles').as('cycle_id'),
         db.ref('slug').withSchema('Cycles').as('cycle_slug'),
-        db.ref('isCurrent').withSchema('Cycles').as('cycle_isCurrent')
+        db.ref('isCurrent').withSchema('Cycles').as('cycle_isCurrent'),
+        db.ref('createdAt').withSchema('Cycles').as('cycle_createdAt'),
+        db.ref('updatedAt').withSchema('Cycles').as('cycle_updatedAt')
       )
   }
 
@@ -131,13 +139,21 @@ export class VacancyService implements VacancyServiceI {
             ? {
                 id: result.cycle_id,
                 slug: result.cycle_slug,
-                isCurrent: result.cycle_isCurrent
+                isCurrent: result.cycle_isCurrent,
+                createdAt: result.cycle_createdAt,
+                updatedAt: result.cycle_updatedAt
               }
             : undefined,
           department: 'department_id' in result
             ? {
                 id: result.department_id,
-                name: result.department_name
+                name: result.department_name,
+                address: result.department_address,
+                phone: result.department_phone,
+                email: result.department_email,
+                chiefName: result.department_chiefName,
+                createdAt: result.department_createdAt,
+                updatedAt: result.department_updatedAt
               }
             : undefined
         }
@@ -175,13 +191,21 @@ export class VacancyService implements VacancyServiceI {
         ? {
             id: result.cycle_id,
             slug: result.cycle_slug,
-            isCurrent: result.cycle_isCurrent
+            isCurrent: result.cycle_isCurrent,
+            createdAt: result.cycle_createdAt,
+            updatedAt: result.cycle_updatedAt
           }
         : undefined,
       department: 'department_id' in result
         ? {
             id: result.department_id,
-            name: result.department_name
+            name: result.department_name,
+            address: result.department_address,
+            phone: result.department_phone,
+            email: result.department_email,
+            chiefName: result.department_chiefName,
+            createdAt: result.department_createdAt,
+            updatedAt: result.department_updatedAt
           }
         : undefined
     }

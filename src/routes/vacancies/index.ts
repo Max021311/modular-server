@@ -18,7 +18,32 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       description: { type: 'string' },
       slots: { type: 'integer' },
       cycleId: { type: 'integer' },
+      cycle: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer' },
+          slug: { type: 'string' },
+          isCurrent: { type: 'boolean' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' }
+        },
+        required: ['id', 'slug', 'isCurrent', 'createdAt', 'updatedAt']
+      },
       departmentId: { type: 'integer' },
+      department: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer' },
+          name: { type: 'string' },
+          address: { type: 'string' },
+          phone: { type: 'string' },
+          email: { type: 'string' },
+          chiefName: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' }
+        },
+        required: ['id', 'name', 'address', 'phone', 'email', 'chiefName', 'createdAt', 'updatedAt']
+      },
       disabled: { type: 'boolean' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' }
@@ -157,8 +182,20 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         ...record,
         createdAt: record.createdAt.toISOString(),
         updatedAt: record.updatedAt.toISOString(),
-        cycle: record.cycle ? record.cycle : undefined,
-        department: record.department ? record.department : undefined
+        cycle: record.cycle
+          ? {
+              ...record.cycle,
+              createdAt: record.cycle.createdAt.toISOString(),
+              updatedAt: record.cycle.updatedAt.toISOString()
+            }
+          : undefined,
+        department: record.department
+          ? {
+              ...record.department,
+              createdAt: record.department.createdAt.toISOString(),
+              updatedAt: record.department.updatedAt.toISOString()
+            }
+          : undefined
       }))
 
       await reply.status(200).send({

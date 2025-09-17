@@ -1,6 +1,6 @@
 import type { CreateVacancy, Vacancy } from '#src/types/vacancy'
-import type { Department } from '#src/types/departments'
-import type { Cycle } from '#src/types/cycles'
+import type { CyclePicked } from '../cycle/types'
+import type { DepartmentPicked } from '../department/types'
 
 export type VacancyPicked = Pick<Vacancy, 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'createdAt'|'updatedAt'>
 
@@ -24,8 +24,8 @@ export interface VacancyServiceConfigI {
 }
 
 export interface VacancyWithJoins extends VacancyPicked {
-  cycle?: Pick<Cycle, 'id'|'slug'|'isCurrent'>
-  department?: Pick<Department, 'id'|'name'>
+  cycle?: CyclePicked
+  department?: DepartmentPicked
 }
 
 export interface FindByIdOpts {
