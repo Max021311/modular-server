@@ -9,6 +9,7 @@ import { BcryptService } from './bcrypt'
 import { TemplateRender } from './template-render/'
 import { DepartmentService } from './department/'
 import { CycleService } from './cycle/'
+import { VacancyService } from './vacancy/'
 import { ConnectionManager } from '#src/common/bd'
 import { CareerService } from './career'
 
@@ -64,6 +65,12 @@ export function getServices (params: GetServicesParams): Services {
   })
   context.services.cycleService = lazyLoad((p) => new CycleService(p), {
     context
+  })
+  context.services.vacancyService = lazyLoad((p) => new VacancyService(p), {
+    context,
+    config: {
+      textSearch: configuration.textSearch
+    }
   })
   return context.services
 }
