@@ -224,4 +224,34 @@ export class StudentService implements StudentServiceI {
 
     return result ?? null
   }
+
+  async findStudentsByVacancyId (vacancyId: number): Promise<Required<StudentWithCareer>[]> {
+    const selectQuery = this.applyCareerJoin(
+      this.selectQuery
+        .where('VacanciesToStudents.vacancyId', '=', vacancyId)
+        .innerJoin('VacanciesToStudents', 'Students.id', '=', 'VacanciesToStudents.studentId')
+    )
+
+    const records = await selectQuery
+
+    return records.map((result) => {
+      return {
+        id: result.id,
+        name: result.name,
+        code: result.code,
+        careerId: result.careerId,
+        email: result.email,
+        telephone: result.telephone,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+        career: {
+          id: result.career_id,
+          name: result.career_name,
+          slug: result.career_slug,
+          createdAt: result.career_createdAt,
+          updatedAt: result.career_updatedAt
+        }
+      }
+    })
+  }
 }

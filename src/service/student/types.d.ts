@@ -30,6 +30,7 @@ export interface StudentServiceI {
   updateStudent(id: number, studentData: UpdateStudent): Promise<StudentWithouPassword>
   findById(id: number, opts?: FindByIdOpts): Promise<StudentWithCareer | null>
   findByEmail(email: string): Promise<StudentWithouPassword | null>
+  findStudentsByVacancyId(vacancyId: number): Promise<Required<StudentWithCareer>[]>
 }
 
 export interface StudentServiceConfigI {
