@@ -1,9 +1,7 @@
 import { Factory } from 'fishery'
-import { Vacancy, CreateVacancy } from '#src/types/vacancy'
+import { Vacancy, CreateVacancy } from '#src/types/vacancy.js'
 import { faker } from '@faker-js/faker'
-import connectionManager from '#src/common/bd'
-import { cycleFactory } from './cycle'
-import { departmentFactory } from './department'
+import connectionManager from '#src/common/bd/index.js'
 
 class VacancyFactory extends Factory<CreateVacancy, null, Vacancy> {
 }

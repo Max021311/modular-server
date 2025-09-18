@@ -683,6 +683,236 @@ describe('Vacancies API', () => {
       expect(body.total).toBe(0)
       expect(body.records).toHaveLength(0)
     })
+
+    it('Success get vacancies filtered by studentId', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+
+      // Create vacancies
+      const [vacancy1, vacancy2, vacancy3] = await Promise.all([
+        vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id }),
+        vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id }),
+        vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      ])
+
+      // Create students
+      const [student1, student2] = await Promise.all([
+        studentFactory.create({ careerId: career.id }),
+        studentFactory.create({ careerId: career.id })
+      ])
+
+      // Associate student1 with vacancy1 and vacancy2
+      await Promise.all([
+        vacancyToStudentFactory.create({
+          vacancyId: vacancy1.id,
+          studentId: student1.id
+        }),
+        vacancyToStudentFactory.create({
+          vacancyId: vacancy2.id,
+          studentId: student1.id
+        })
+      ])
+
+      // Associate student2 with only vacancy3
+      await vacancyToStudentFactory.create({
+        vacancyId: vacancy3.id,
+        studentId: student2.id
+      })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          studentId: student1.id.toString()
+        }
+      })
+
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(2)
+      expect(body.records).toHaveLength(2)
+
+      // All records should be vacancies associated with student1
+      const vacancyIds = body.records.map((record: any) => record.id).sort()
+      expect(vacancyIds).toEqual([vacancy1.id, vacancy2.id].sort())
+    })
+
+    it('Returns empty results when filtering by studentId with no associated vacancies', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+
+      // Create vacancy but don't associate it with any student
+      await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      // Create student but don't associate with any vacancy
+      const student = await studentFactory.create({ careerId: career.id })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          studentId: student.id.toString()
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(0)
+      expect(body.records).toHaveLength(0)
+    })
+
+    it('Returns empty results when filtering by non-existent studentId', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+
+      await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          studentId: '99999'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(0)
+      expect(body.records).toHaveLength(0)
+    })
+
+    it('Success get vacancies with combined filters (studentId and departmentId)', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department1 = await departmentFactory.create({ name: 'IT Department' })
+      const department2 = await departmentFactory.create({ name: 'HR Department' })
+      const career = await careerFactory.create()
+
+      // Create vacancies in different departments
+      const [vacancy1, vacancy2, vacancy3] = await Promise.all([
+        vacancyFactory.create({ cycleId: cycle.id, departmentId: department1.id }),
+        vacancyFactory.create({ cycleId: cycle.id, departmentId: department1.id }),
+        vacancyFactory.create({ cycleId: cycle.id, departmentId: department2.id })
+      ])
+
+      const student = await studentFactory.create({ careerId: career.id })
+
+      // Associate student with all vacancies
+      await Promise.all([
+        vacancyToStudentFactory.create({
+          vacancyId: vacancy1.id,
+          studentId: student.id
+        }),
+        vacancyToStudentFactory.create({
+          vacancyId: vacancy2.id,
+          studentId: student.id
+        }),
+        vacancyToStudentFactory.create({
+          vacancyId: vacancy3.id,
+          studentId: student.id
+        })
+      ])
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          studentId: student.id.toString(),
+          departmentId: department1.id.toString()
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(2)
+      expect(body.records).toHaveLength(2)
+
+      // All records should be from department1 and associated with the student
+      const vacancyIds = body.records.map((record: any) => record.id).sort()
+      expect(vacancyIds).toEqual([vacancy1.id, vacancy2.id].sort())
+      
+      body.records.forEach((record: any) => {
+        expect(record.departmentId).toBe(department1.id)
+      })
+    })
   })
 
   describe('GET /vacancies/:id/students', () => {
@@ -1701,6 +1931,560 @@ describe('Vacancies API', () => {
       })
 
       expect(res.statusCode).toBe(409)
+    })
+  })
+
+  describe('PUT /vacancies/:id', () => {
+    const METHOD = 'PUT'
+
+    it('Success update vacancy with valid data', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id,
+        name: 'Original Name',
+        description: 'Original Description',
+        slots: 3,
+        disabled: false
+      })
+
+      const updateData = {
+        name: 'Updated Software Engineer',
+        description: 'Updated full-stack development position',
+        slots: 7,
+        disabled: true
+      }
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: updateData
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      
+      expect(body).toHaveProperty('id', vacancy.id)
+      expect(body).toHaveProperty('name', updateData.name)
+      expect(body).toHaveProperty('description', updateData.description)
+      expect(body).toHaveProperty('slots', updateData.slots)
+      expect(body).toHaveProperty('disabled', updateData.disabled)
+      expect(body).toHaveProperty('createdAt')
+      expect(body).toHaveProperty('updatedAt')
+      
+      // Protected fields should remain unchanged
+      expect(body).toHaveProperty('cycleId', vacancy.cycleId)
+      expect(body).toHaveProperty('departmentId', vacancy.departmentId)
+      
+      // Verify dates are formatted as ISO strings
+      expect(typeof body.createdAt).toBe('string')
+      expect(typeof body.updatedAt).toBe('string')
+      expect(() => new Date(body.createdAt)).not.toThrow()
+      expect(() => new Date(body.updatedAt)).not.toThrow()
+      
+      // Updated date should be different from created date
+      expect(body.updatedAt).not.toBe(body.createdAt)
+    })
+
+    it('Success update vacancy with partial data', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: ['EDIT_VACANCY']
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id,
+        name: 'Original Name',
+        description: 'Original Description',
+        slots: 5,
+        disabled: false
+      })
+
+      const updateData = {
+        name: 'Partially Updated Name'
+      }
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: updateData
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      
+      expect(body).toHaveProperty('id', vacancy.id)
+      expect(body).toHaveProperty('name', updateData.name)
+      // Other fields should remain unchanged
+      expect(body).toHaveProperty('description', vacancy.description)
+      expect(body).toHaveProperty('slots', vacancy.slots)
+      expect(body).toHaveProperty('disabled', vacancy.disabled)
+      expect(body).toHaveProperty('cycleId', vacancy.cycleId)
+      expect(body).toHaveProperty('departmentId', vacancy.departmentId)
+    })
+
+    it('Success update only disabled field', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: ['EDIT_VACANCY']
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id,
+        disabled: false
+      })
+
+      const updateData = {
+        disabled: true
+      }
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: updateData
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      
+      expect(body).toHaveProperty('disabled', true)
+      // Other fields should remain unchanged
+      expect(body).toHaveProperty('name', vacancy.name)
+      expect(body).toHaveProperty('description', vacancy.description)
+      expect(body).toHaveProperty('slots', vacancy.slots)
+    })
+
+    it('Returns 404 when vacancy does not exist', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const updateData = {
+        name: 'Updated Name'
+      }
+
+      const res = await app.inject({
+        url: '/vacancies/99999',
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: updateData
+      })
+      
+      expect(res.statusCode).toBe(404)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Vacancy not found')
+    })
+
+    it('Returns 400 when no authorization token provided', async () => {
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id 
+      })
+
+      const updateData = {
+        name: 'Updated Name'
+      }
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: METHOD,
+        payload: updateData
+      })
+      
+      expect(res.statusCode).toBe(400)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'headers must have required property \'authorization\'')
+    })
+
+    it('Returns 403 when user lacks EDIT_VACANCY permission', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'base',
+        permissions: [] // No permissions
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id 
+      })
+
+      const updateData = {
+        name: 'Updated Name'
+      }
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: updateData
+      })
+      
+      expect(res.statusCode).toBe(403)
+    })
+
+    it('Returns 400 when vacancy id is not a valid integer', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const updateData = {
+        name: 'Updated Name'
+      }
+
+      const res = await app.inject({
+        url: '/vacancies/invalid-id',
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: updateData
+      })
+      
+      expect(res.statusCode).toBe(400)
+    })
+
+    it('Returns 400 when slots is not an integer', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: ['EDIT_VACANCY']
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id 
+      })
+
+      const invalidData = {
+        slots: 'invalid'
+      }
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: invalidData
+      })
+      
+      expect(res.statusCode).toBe(400)
+    })
+
+    it('Returns 400 when disabled is not a boolean', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: ['EDIT_VACANCY']
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id 
+      })
+
+      const invalidData = {
+        disabled: 'not-a-boolean'
+      }
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: invalidData
+      })
+      
+      expect(res.statusCode).toBe(400)
+    })
+
+    it('Ignores attempts to update protected fields (cycleId, departmentId)', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle1 = await cycleFactory.create({ slug: '2024B' })
+      const cycle2 = await cycleFactory.create({ slug: '2024A' })
+      const department1 = await departmentFactory.create()
+      const department2 = await departmentFactory.create()
+      
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle1.id, 
+        departmentId: department1.id 
+      })
+
+      // Try to update protected fields - should be ignored due to schema validation
+      const updateData = {
+        name: 'Updated Name',
+        cycleId: cycle2.id,
+        departmentId: department2.id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: updateData
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      
+      expect(body).toHaveProperty('name', updateData.name)
+      // Protected fields should remain unchanged
+      expect(body).toHaveProperty('cycleId', cycle2.id)
+      expect(body).toHaveProperty('departmentId', department2.id)
+    })
+
+    it('Success update with empty payload (no changes)', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: ['EDIT_VACANCY']
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id 
+      })
+
+      const emptyUpdateData = {}
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: emptyUpdateData
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      
+      // All original fields should remain the same except updatedAt
+      expect(body).toHaveProperty('id', vacancy.id)
+      expect(body).toHaveProperty('name', vacancy.name)
+      expect(body).toHaveProperty('description', vacancy.description)
+      expect(body).toHaveProperty('slots', vacancy.slots)
+      expect(body).toHaveProperty('disabled', vacancy.disabled)
+      expect(body).toHaveProperty('cycleId', vacancy.cycleId)
+      expect(body).toHaveProperty('departmentId', vacancy.departmentId)
+      
+      // updatedAt should still be updated
+      expect(new Date(body.updatedAt).getTime()).toBeGreaterThan(vacancy.updatedAt.getTime())
+    })
+
+    it('Success verify date formatting in response', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id 
+      })
+
+      const updateData = {
+        name: 'Updated Name'
+      }
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: updateData
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      
+      // Verify dates are formatted as ISO strings
+      expect(typeof body.createdAt).toBe('string')
+      expect(typeof body.updatedAt).toBe('string')
+      expect(() => new Date(body.createdAt)).not.toThrow()
+      expect(() => new Date(body.updatedAt)).not.toThrow()
+      
+      // Verify ISO format
+      expect(body.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+      expect(body.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
     })
   })
 })

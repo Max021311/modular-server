@@ -1,4 +1,4 @@
-import type { CreateVacancy, Vacancy } from '#src/types/vacancy.js'
+import type { UpdateVacancy, CreateVacancy, Vacancy } from '#src/types/vacancy.js'
 import type { CyclePicked } from '../cycle/types.js'
 import type { DepartmentPicked } from '../department/types.js'
 
@@ -15,6 +15,7 @@ export interface FindAndCountParams {
   includeDepartment?: boolean
   departmentId?: number
   cycleId?: number
+  studentId?: number
 }
 
 export interface VacancyServiceConfigI {
@@ -37,4 +38,5 @@ export interface VacancyServiceI {
   findAndCount(params: FindAndCountParams): Promise<{ total: number, records: VacancyWithJoins[] }>
   findById(id: number, opts?: FindByIdOpts): Promise<VacancyWithJoins | null>
   create(vacancy: Omit<CreateVacancy, 'createdAt'|'updatedAt'>): Promise<VacancyPicked>
+  update(id: number, vacancy: UpdateVacancy): Promise<VacancyPicked | null>
 }

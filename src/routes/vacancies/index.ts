@@ -76,7 +76,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       includeCycle: { type: 'boolean', default: false },
       includeDepartment: { type: 'boolean', default: false },
       departmentId: { type: 'integer' },
-      cycleId: { type: 'integer' }
+      cycleId: { type: 'integer' },
+      studentId: { type: 'integer' }
     }
   } as const satisfies JSONSchema
 
@@ -127,6 +128,16 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     required: ['name', 'description', 'slots', 'cycleId', 'departmentId', 'disabled']
   } as const satisfies JSONSchema
 
+  const updateVacancySchema = {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      description: { type: 'string' },
+      slots: { type: 'integer' },
+      disabled: { type: 'boolean' }
+    }
+  } as const satisfies JSONSchema
+
   server.route({
     method: 'GET',
     url: '/',
@@ -165,7 +176,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         includeCycle = false,
         includeDepartment = false,
         departmentId,
-        cycleId
+        cycleId,
+        studentId
       } = request.query
 
       const result = await services.vacancyService().findAndCount({
@@ -176,7 +188,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         includeCycle,
         includeDepartment,
         departmentId,
-        cycleId
+        cycleId,
+        studentId
       })
 
       const records = result.records.map(record => ({
@@ -320,6 +333,62 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
               updatedAt: vacancy.department.updatedAt.toISOString()
             }
           : undefined
+      }
+
+      await reply.status(200).send(response)
+    }
+  })
+
+  server.route({
+    method: 'PUT',
+    url: '/:id',
+    schema: {
+      description: `Endpoint to update a vacancy. This endpoint require the user permission \`${PERMISSIONS.EDIT_VACANCY}\``,
+      tags: ['Vacancies'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer' }
+        },
+        required: ['id']
+      } as const satisfies JSONSchema,
+      body: updateVacancySchema,
+      response: {
+        200: vacancyResponseSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_VACANCY]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const { id } = request.params
+      const vacancy = request.body
+
+      const updatedVacancy = await services.vacancyService().update(id, vacancy)
+
+      if (!updatedVacancy) {
+        await reply.status(404).send({
+          message: 'Vacancy not found'
+        })
+        return
+      }
+
+      const response = {
+        ...updatedVacancy,
+        createdAt: updatedVacancy.createdAt.toISOString(),
+        updatedAt: updatedVacancy.updatedAt.toISOString()
       }
 
       await reply.status(200).send(response)

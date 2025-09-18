@@ -3,7 +3,8 @@ import type {
   FindAndCountParams,
   FindByIdOpts,
   VacancyServiceConfigI,
-  CreateVacancy
+  CreateVacancy,
+  UpdateVacancy
 } from './types.js'
 import type { ModuleConstructorParams } from '#src/service/types.js'
 import type { Knex } from 'knex'
@@ -79,7 +80,7 @@ export class VacancyService implements VacancyServiceI {
   }
 
   async findAndCount (params: FindAndCountParams) {
-    const { limit, offset, order, search, includeCycle, includeDepartment, departmentId, cycleId } = params
+    const { limit, offset, order, search, includeCycle, includeDepartment, departmentId, cycleId, studentId } = params
     const db = this.db
 
     let countQuery = db.table('Vacancies')
@@ -95,9 +96,9 @@ export class VacancyService implements VacancyServiceI {
     if (search) {
       const { language } = this.config.textSearch
       selectQuery = selectQuery
-        .where(db.raw('search_vector @@ plainto_tsquery(?, ?)', [language, search]))
+        .where(db.raw('"Vacancies".search_vector @@ plainto_tsquery(?, ?)', [language, search]))
       countQuery = countQuery
-        .where(db.raw('search_vector @@ plainto_tsquery(?, ?)', [language, search]))
+        .where(db.raw('"Vacancies".search_vector @@ plainto_tsquery(?, ?)', [language, search]))
     }
 
     if (departmentId) {
@@ -108,6 +109,21 @@ export class VacancyService implements VacancyServiceI {
     if (cycleId) {
       selectQuery = selectQuery.where('Vacancies.cycleId', '=', cycleId)
       countQuery = countQuery.where('cycleId', '=', cycleId)
+    }
+
+    if (studentId) {
+      selectQuery = selectQuery
+        .modify(query => {
+          query
+            .join('VacanciesToStudents', 'Vacancies.id', '=', 'VacanciesToStudents.vacancyId')
+            .where('VacanciesToStudents.studentId', '=', studentId)
+        })
+      countQuery = countQuery
+        .modify(query => {
+          query
+            .join('VacanciesToStudents', 'Vacancies.id', '=', 'VacanciesToStudents.vacancyId')
+            .where('VacanciesToStudents.studentId', '=', studentId)
+        })
     }
 
     if (includeCycle === true) {
@@ -237,5 +253,35 @@ export class VacancyService implements VacancyServiceI {
     }
 
     return createdVacancy
+  }
+
+  async update (id: number, vacancy: UpdateVacancy) {
+    const db = this.db
+
+    const [result] = await db.table('Vacancies')
+      .where('id', '=', id)
+      .update({
+        ...vacancy,
+        updatedAt: new Date()
+      })
+      .returning('*')
+
+    if (!result) {
+      return null
+    }
+
+    const updatedVacancy = {
+      id: result.id,
+      name: result.name,
+      description: result.description,
+      slots: result.slots,
+      cycleId: result.cycleId,
+      departmentId: result.departmentId,
+      disabled: result.disabled,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt
+    }
+
+    return updatedVacancy
   }
 }
