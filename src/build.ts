@@ -4,7 +4,6 @@ import { options } from './common/logger.js'
 import cors from '@fastify/cors'
 import servicesPlugin from './plugins/services.js'
 import fastifySwagger from '@fastify/swagger'
-import scalarPlugin from '@scalar/fastify-api-reference'
 
 function build () {
   const server = fastify({
@@ -52,9 +51,6 @@ function build () {
           { name: 'Vacancies', description: 'Vacancies related end-points' }
         ]
       }
-    })
-    .register(scalarPlugin, {
-      routePrefix: '/documentation'
     })
     .register(cors, {
       origin: ['http://localhost:3000']
