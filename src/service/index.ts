@@ -11,6 +11,7 @@ import { DepartmentService } from './department/index.js'
 import { CycleService } from './cycle/index.js'
 import { ConnectionManager } from '#src/common/bd/index.js'
 import { CareerService } from './career/index.js'
+import { VacancyService } from './vacancy/index.js'
 
 interface GetServicesParams {
   logger: Logger
@@ -64,6 +65,12 @@ export function getServices (params: GetServicesParams): Services {
   })
   context.services.cycleService = lazyLoad((p) => new CycleService(p), {
     context
+  })
+  context.services.vacancyService = lazyLoad((p) => new VacancyService(p), {
+    context,
+    config: {
+      textSearch: configuration.textSearch
+    }
   })
   return context.services
 }

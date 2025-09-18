@@ -7,6 +7,7 @@ import type { CareerServiceI } from '#src/service/career/types.js'
 import type { TemplateRenderI } from '#src/service/template-render/types.js'
 import type { DepartmentServiceI } from '#src/service/department/types.js'
 import type { CycleServiceI } from '#src/service/cycle/types.js'
+import type { VacancyServiceI } from '#src/service/vacancy/types.js'
 import type { BaseLogger } from 'pino'
 import type { ConnectionManager } from '#src/common/bd/index.js'
 
@@ -22,6 +23,7 @@ export interface Services {
   careerService: () => CareerServiceI
   departmentService: () => DepartmentServiceI
   cycleService: () => CycleServiceI
+  vacancyService: () => VacancyServiceI
 }
 
 export interface ApplicationContext <T extends (keyof Services | unknown) = keyof Services> {
