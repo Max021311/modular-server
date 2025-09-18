@@ -1,9 +1,10 @@
 import { type preHandlerAsyncHookHandler } from 'fastify'
-import { HttpError } from '../common/error'
-import { TokenExpiredError, JsonWebTokenError, NotBeforeError } from 'jsonwebtoken'
-import TOKEN_SCOPES from '#src/common/token-scopes'
-import { type PERMISSIONS } from '#src/common/permissions'
-import loadPermissions from '#src/common/load-permissions'
+import { HttpError } from '../common/error.js'
+import jwt from 'jsonwebtoken'
+import TOKEN_SCOPES from '#src/common/token-scopes.js'
+import { type PERMISSIONS } from '#src/common/permissions.js'
+import loadPermissions from '#src/common/load-permissions.js'
+const { TokenExpiredError, JsonWebTokenError, NotBeforeError } = jwt
 
 function targetContains (arr: string[], target: string[]): boolean {
   return target.every(value => arr.includes(value))
@@ -18,7 +19,7 @@ function buildVerifyUserToken (permissionGuards: PERMISSIONS[]) {
     const token = authorization.split(' ')[1]
 
     const payload = await this.services.jwtService().verify(token)
-      .catch(error => {
+      .catch((error: unknown) => {
         if (error instanceof TokenExpiredError) throw new HttpError(`Authorization token expired at ${error.expiredAt}`, 401)
         if (error instanceof JsonWebTokenError) throw new HttpError('Invalid authorization token', 400)
         if (error instanceof NotBeforeError) throw new HttpError('Invalid token', 401)

@@ -5,8 +5,8 @@ import type {
   SendInviteUserEmailParams,
   EmailServiceConfig,
   SendEmailParams
-} from './types'
-import type { ModuleConstructorParams } from '#src/service/types'
+} from './types.js'
+import type { ModuleConstructorParams } from '#src/service/types.js'
 
 type ConstructorParams = ModuleConstructorParams<'logger'|'services', 'templateRender', EmailServiceConfig>
 

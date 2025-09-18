@@ -1,12 +1,14 @@
 import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts'
 import { JSONSchema } from 'json-schema-to-ts'
 import { FastifyPluginAsync } from 'fastify'
-import { orderQueryToOrder } from '#src/common/order-query'
-import buildVerifyUserToken from '#src/prehandlers/verify-user-token'
-import { PERMISSIONS } from '#src/common/permissions'
-import { HttpError } from '#src/common/error'
-import { fastifyErrorSchema } from '#src/common/schemas'
-import { DatabaseError } from 'pg'
+import { orderQueryToOrder } from '#src/common/order-query.js'
+import buildVerifyUserToken from '#src/prehandlers/verify-user-token.js'
+import { PERMISSIONS } from '#src/common/permissions.js'
+import { HttpError } from '#src/common/error.js'
+import { fastifyErrorSchema } from '#src/common/schemas.js'
+import pg from 'pg'
+
+const { DatabaseError } = pg
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()

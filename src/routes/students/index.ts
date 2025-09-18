@@ -1,15 +1,18 @@
 import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts'
 import { JSONSchema } from 'json-schema-to-ts'
-import config from '../../common/configuration'
-import TOKEN_SCOPES from '#src/common/token-scopes'
+import config from '../../common/configuration.js'
+import TOKEN_SCOPES from '#src/common/token-scopes.js'
 import { FastifyPluginAsync } from 'fastify'
-import { HttpError } from '#src/common/error'
-import { TokenExpiredError, JsonWebTokenError, NotBeforeError } from 'jsonwebtoken'
-import { fastifyErrorSchema } from '#src/common/schemas'
-import { orderQueryToOrder } from '#src/common/order-query'
-import buildVerifyUserToken from '#src/prehandlers/verify-user-token'
-import { PERMISSIONS } from '#src/common/permissions'
-import { DatabaseError } from 'pg'
+import { HttpError } from '#src/common/error.js'
+import jwt from 'jsonwebtoken'
+import { fastifyErrorSchema } from '#src/common/schemas.js'
+import { orderQueryToOrder } from '#src/common/order-query.js'
+import buildVerifyUserToken from '#src/prehandlers/verify-user-token.js'
+import { PERMISSIONS } from '#src/common/permissions.js'
+import pg from 'pg'
+
+const { DatabaseError } = pg
+const { TokenExpiredError, JsonWebTokenError, NotBeforeError } = jwt
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()

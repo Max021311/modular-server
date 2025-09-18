@@ -1,6 +1,6 @@
-import { getServices } from '#src/service'
-import { Services } from '#src/service/types'
-import connectionManager from '#src/common/bd'
+import { getServices } from '#src/service/index.js'
+import { Services } from '#src/service/types.js'
+import connectionManager from '#src/common/bd/index.js'
 import fp from 'fastify-plugin'
 
 export default fp(async (fastify) => {

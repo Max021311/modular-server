@@ -1,5 +1,5 @@
-import type { CreateStudent, Student, UpdateStudent } from '#src/types/student'
-import type { Career } from '#src/types/career'
+import type { CreateStudent, Student, UpdateStudent } from '#src/types/student.js'
+import type { Career } from '#src/types/career.js'
 
 export { CreateStudent, UpdateStudent } from '#src/types/student'
 

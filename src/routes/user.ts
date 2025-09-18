@@ -1,12 +1,13 @@
 import fp from 'fastify-plugin'
 import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts'
 import { JSONSchema } from 'json-schema-to-ts'
-import TOKEN_SCOPES from '../common/token-scopes'
-import buildVerifyUserToken from '../prehandlers/verify-user-token'
-import { PERMISSIONS } from '#src/common/permissions'
-import config from '#src/common/configuration'
-import { HttpError } from '#src/common/error'
-import { TokenExpiredError, JsonWebTokenError, NotBeforeError } from 'jsonwebtoken'
+import TOKEN_SCOPES from '../common/token-scopes.js'
+import buildVerifyUserToken from '../prehandlers/verify-user-token.js'
+import { PERMISSIONS } from '#src/common/permissions.js'
+import config from '#src/common/configuration.js'
+import { HttpError } from '#src/common/error.js'
+import jwt from 'jsonwebtoken'
+const { TokenExpiredError, JsonWebTokenError, NotBeforeError } = jwt
 
 export default fp(async function RoutesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()

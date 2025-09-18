@@ -1,10 +1,10 @@
-import { UserWithoutPassword } from '#src/types/user'
+import { UserWithoutPassword } from '#src/types/user.js'
 
 import {
   type PERMISSIONS,
   type Roles,
   DEFAULT_ROLE_PERMISSIONS
-} from './permissions'
+} from './permissions.js'
 
 function loadPermissions (user: UserWithoutPassword) : PERMISSIONS[] {
   const role: keyof Roles = user.role ?? 'base'

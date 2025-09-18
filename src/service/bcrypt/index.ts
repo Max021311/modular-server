@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
-import type { BcryptServiceI } from './types'
-import type { ModuleConstructorParams } from '#src/service/types'
+import type { BcryptServiceI } from './types.js'
+import type { ModuleConstructorParams } from '#src/service/types.js'
 
 type ConstructorParams = ModuleConstructorParams<'logger', unknown>
 

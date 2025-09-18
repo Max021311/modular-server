@@ -1,8 +1,8 @@
 import type {
   RenderParams,
   TemplateRenderI
-} from './types'
-import type { ModuleConstructorParams } from '#src/service/types'
+} from './types.js'
+import type { ModuleConstructorParams } from '#src/service/types.js'
 import nunjucks from 'nunjucks'
 import { join } from 'node:path'
 
