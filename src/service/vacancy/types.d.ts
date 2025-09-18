@@ -1,10 +1,10 @@
-import type { CreateVacancy, Vacancy } from '#src/types/vacancy'
-import type { CyclePicked } from '../cycle/types'
-import type { DepartmentPicked } from '../department/types'
+import type { CreateVacancy, Vacancy } from '#src/types/vacancy.js'
+import type { CyclePicked } from '../cycle/types.js'
+import type { DepartmentPicked } from '../department/types.js'
 
 export type VacancyPicked = Pick<Vacancy, 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'createdAt'|'updatedAt'>
 
-export { CreateVacancy, UpdateVacancy } from '#src/types/vacancy'
+export { CreateVacancy, UpdateVacancy } from '#src/types/vacancy.js'
 
 export interface FindAndCountParams {
   limit: number

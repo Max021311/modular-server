@@ -1,4 +1,4 @@
-import pino, { type LoggerOptions } from 'pino'
+import { pino, type LoggerOptions } from 'pino'
 
 export const options: LoggerOptions = {
   level: 'info'

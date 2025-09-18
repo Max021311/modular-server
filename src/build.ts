@@ -1,8 +1,8 @@
 import fastify from 'fastify'
-import routesPlugin from './routes'
-import { options } from './common/logger'
+import routesPlugin from './routes/index.js'
+import { options } from './common/logger.js'
 import cors from '@fastify/cors'
-import servicesPlugin from './plugins/services'
+import servicesPlugin from './plugins/services.js'
 import fastifySwagger from '@fastify/swagger'
 import scalarPlugin from '@scalar/fastify-api-reference'
 

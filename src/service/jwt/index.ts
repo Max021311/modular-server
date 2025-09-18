@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
-import type { SignPayloads, DecodedTokens, JwtServiceConfig, JwtServiceI } from './types'
-import type { ModuleConstructorParams } from '#src/service/types'
+import type { SignPayloads, DecodedTokens, JwtServiceConfig, JwtServiceI } from './types.js'
+import type { ModuleConstructorParams } from '#src/service/types.js'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger',

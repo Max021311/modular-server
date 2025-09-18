@@ -1,4 +1,4 @@
-import build from './build'
+import build from './build.js'
 
 const server = build()
 

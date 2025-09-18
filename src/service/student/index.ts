@@ -7,9 +7,9 @@ import type {
   UpdateStudent,
   FindAndCountParams,
   FindByIdOpts
-} from './types'
-import type { ModuleConstructorParams } from '#src/service/types'
-import { HttpError } from '#src/common/error'
+} from './types.js'
+import type { ModuleConstructorParams } from '#src/service/types.js'
+import { HttpError } from '#src/common/error.js'
 import bcrypt from 'bcrypt'
 
 type ConstructorParams = ModuleConstructorParams<
@@ -227,6 +227,7 @@ export class StudentService implements StudentServiceI {
 
   async findStudentsByVacancyId (vacancyId: number): Promise<Required<StudentWithCareer>[]> {
     const selectQuery = this.applyCareerJoin(
+      // @ts-expect-error type mistmatch
       this.selectQuery
         .where('VacanciesToStudents.vacancyId', '=', vacancyId)
         .innerJoin('VacanciesToStudents', 'Students.id', '=', 'VacanciesToStudents.studentId')

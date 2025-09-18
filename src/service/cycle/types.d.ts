@@ -1,8 +1,8 @@
-import type { CreateCycle, Cycle, UpdateCycle } from '#src/types/cycles'
+import type { CreateCycle, Cycle, UpdateCycle } from '#src/types/cycles.js'
 
 export type CyclePicked = Pick<Cycle, 'id'|'slug'|'isCurrent'|'createdAt'|'updatedAt'>
 
-export { CreateCycle, UpdateCycle } from '#src/types/cycles'
+export { CreateCycle, UpdateCycle } from '#src/types/cycles.js'
 
 export interface FindAndCountParams {
   limit: number
@@ -20,4 +20,3 @@ export interface CycleServiceI {
   update(id: number, cycleData: Partial<Omit<UpdateCycle, 'updatedAt'>>): Promise<CyclePicked>
   setCurrent(id: number): Promise<CyclePicked>
 }
-

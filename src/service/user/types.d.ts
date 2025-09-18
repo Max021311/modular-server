@@ -1,4 +1,4 @@
-import type { CreateUser, UserWithoutPassword } from '#src/types/user'
+import type { CreateUser, UserWithoutPassword } from '#src/types/user.js'
 
 export { CreateUser } from '#src/types/user'
 

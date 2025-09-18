@@ -4,8 +4,8 @@ import type {
   DepartmentServiceConfigI,
   CreateDepartment,
   UpdateDepartment
-} from './types'
-import type { ModuleConstructorParams } from '#src/service/types'
+} from './types.js'
+import type { ModuleConstructorParams } from '#src/service/types.js'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger'|'connectionManager',

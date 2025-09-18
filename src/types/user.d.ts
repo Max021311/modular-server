@@ -1,4 +1,4 @@
-import type { Roles, PERMISSIONS } from '#src/common/permissions'
+import type { Roles, PERMISSIONS } from '#src/common/permissions.js'
 
 export interface User {
   id: number

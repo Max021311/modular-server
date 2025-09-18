@@ -1,10 +1,10 @@
 import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts'
 import { JSONSchema } from 'json-schema-to-ts'
 import { FastifyPluginAsync } from 'fastify'
-import { orderQueryToOrder } from '#src/common/order-query'
-import buildVerifyUserToken from '#src/prehandlers/verify-user-token'
-import { PERMISSIONS } from '#src/common/permissions'
-import { HttpError } from '#src/common/error'
+import { orderQueryToOrder } from '#src/common/order-query.js'
+import buildVerifyUserToken from '#src/prehandlers/verify-user-token.js'
+import { PERMISSIONS } from '#src/common/permissions.js'
+import { HttpError } from '#src/common/error.js'
 import { DatabaseError } from 'pg'
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
@@ -305,8 +305,20 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         ...vacancy,
         createdAt: vacancy.createdAt.toISOString(),
         updatedAt: vacancy.updatedAt.toISOString(),
-        cycle: vacancy.cycle ? vacancy.cycle : undefined,
-        department: vacancy.department ? vacancy.department : undefined
+        cycle: vacancy.cycle
+          ? {
+              ...vacancy.cycle,
+              createdAt: vacancy.cycle.createdAt.toISOString(),
+              updatedAt: vacancy.cycle.updatedAt.toISOString()
+            }
+          : undefined,
+        department: vacancy.department
+          ? {
+              ...vacancy.department,
+              createdAt: vacancy.department.createdAt.toISOString(),
+              updatedAt: vacancy.department.updatedAt.toISOString()
+            }
+          : undefined
       }
 
       await reply.status(200).send(response)

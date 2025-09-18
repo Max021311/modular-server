@@ -1,5 +1,5 @@
 import type { Knex } from 'knex'
-import configuration from '#src/common/configuration'
+import configuration from '#src/common/configuration.js'
 
 export async function up (knex: Knex): Promise<void> {
   await knex.schema

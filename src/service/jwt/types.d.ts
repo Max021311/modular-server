@@ -1,6 +1,6 @@
 import type { JwtPayload, Jwt } from 'jsonwebtoken'
-import type TOKEN_SCOPES from '#src/common/token-scopes'
-import type { Roles, PERMISSIONS } from '#src/common/permissions'
+import type TOKEN_SCOPES from '#src/common/token-scopes.js'
+import type { Roles, PERMISSIONS } from '#src/common/permissions.js'
 
 export interface UserTokenPayload {
   id: number

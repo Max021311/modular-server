@@ -7,4 +7,4 @@ interface Cycle {
 }
 
 export type CreateCycle = Omit<Cycle, 'id'>
-export type UpdateCycle = Omit<Cycle, 'id'|'createdAt'>
+export type UpdateCycle = Partial<Omit<Cycle, 'id'|'createdAt'>>

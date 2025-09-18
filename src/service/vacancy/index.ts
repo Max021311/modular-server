@@ -4,11 +4,11 @@ import type {
   FindByIdOpts,
   VacancyServiceConfigI,
   CreateVacancy
-} from './types'
-import type { ModuleConstructorParams } from '#src/service/types'
+} from './types.js'
+import type { ModuleConstructorParams } from '#src/service/types.js'
 import type { Knex } from 'knex'
-import { Tables } from 'knex/types/tables'
-import { PrefixedPick, AtLeastOneJoin } from '#src/types/utils'
+import { Tables } from 'knex/types/tables.js'
+import { PrefixedPick, AtLeastOneJoin } from '#src/types/utils.js'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger'|'connectionManager',

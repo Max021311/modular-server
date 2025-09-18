@@ -1,13 +1,13 @@
-import { HttpError } from '#src/common/error'
+import { HttpError } from '#src/common/error.js'
 import bcrypt from 'bcrypt'
-import type { UserTokenPayload } from '#src/service/jwt/types'
-import TOKEN_SCOPES from '#src/common/token-scopes'
+import type { UserTokenPayload } from '#src/service/jwt/types.js'
+import TOKEN_SCOPES from '#src/common/token-scopes.js'
 import type {
   UserServiceI,
   CreateUser
-} from './types'
-import type { ModuleConstructorParams } from '#src/service/types'
-import loadPermissions from '#src/common/load-permissions'
+} from './types.js'
+import type { ModuleConstructorParams } from '#src/service/types.js'
+import loadPermissions from '#src/common/load-permissions.js'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger'|'services'|'connectionManager',

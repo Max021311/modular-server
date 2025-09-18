@@ -1,8 +1,8 @@
-import type { CreateDepartment, Department, UpdateDepartment } from '#src/types/departments'
+import type { CreateDepartment, Department, UpdateDepartment } from '#src/types/departments.js'
 
 export type DepartmentPicked = Pick<Department, 'id'|'name'|'address'|'phone'|'email'|'chiefName'|'createdAt'|'updatedAt'>
 
-export { CreateDepartment, UpdateDepartment } from '#src/types/departments'
+export { CreateDepartment, UpdateDepartment } from '#src/types/departments.js'
 
 export interface FindAndCountParams {
   limit: number
