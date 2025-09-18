@@ -34,9 +34,17 @@ export interface FindByIdOpts {
   includeDepartment?: boolean
 }
 
+export interface VacancyAssociationValidationResult {
+  isValid: boolean
+  error?: 'STUDENT_HAS_CYCLE_ASSOCIATION' | 'VACANCY_NO_SLOTS' | 'ASSOCIATION_EXISTS'
+  message?: string
+}
+
 export interface VacancyServiceI {
   findAndCount(params: FindAndCountParams): Promise<{ total: number, records: VacancyWithJoins[] }>
   findById(id: number, opts?: FindByIdOpts): Promise<VacancyWithJoins | null>
   create(vacancy: Omit<CreateVacancy, 'createdAt'|'updatedAt'>): Promise<VacancyPicked>
   update(id: number, vacancy: UpdateVacancy): Promise<VacancyPicked | null>
+  validateAssociation(vacancyId: number, studentId: number, vacancyCycleId: number): Promise<VacancyAssociationValidationResult>
+  createAssociation(vacancyId: number, studentId: number): Promise<void>
 }

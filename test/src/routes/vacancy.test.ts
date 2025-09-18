@@ -2487,4 +2487,560 @@ describe('Vacancies API', () => {
       expect(body.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
     })
   })
+
+  describe('POST /vacancies/:vacancyId/associate/:studentId', () => {
+    const METHOD = 'POST'
+
+    it('Success associate student with vacancy', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        slots: 5,
+        disabled: false
+      })
+      
+      const student = await studentFactory.create({
+        careerId: career.id
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/associate/${student.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      console.log(res.payload)
+      
+      expect(res.statusCode).toBe(201)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Student successfully associated with vacancy')
+    })
+
+    it('Returns 404 when vacancy does not exist', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: ['EDIT_VACANCY']
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const career = await careerFactory.create()
+      const student = await studentFactory.create({
+        careerId: career.id
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/99999/associate/${student.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(404)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Vacancy not found')
+    })
+
+    it('Returns 404 when student does not exist', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: ['EDIT_VACANCY']
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        disabled: false
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/associate/99999`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(404)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Student not found')
+    })
+
+    it('Returns 409 when trying to associate to inactive vacancy', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        disabled: true // Inactive vacancy
+      })
+      
+      const student = await studentFactory.create({
+        careerId: career.id
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/associate/${student.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(409)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Cannot associate to inactive vacancy')
+    })
+
+    it('Returns 409 when student already has vacancy association for same cycle', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: ['EDIT_VACANCY']
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      
+      const [vacancy1, vacancy2] = await Promise.all([
+        vacancyFactory.create({
+          cycleId: cycle.id,
+          departmentId: department.id,
+          disabled: false
+        }),
+        vacancyFactory.create({
+          cycleId: cycle.id,
+          departmentId: department.id,
+          disabled: false
+        })
+      ])
+      
+      const student = await studentFactory.create({
+        careerId: career.id
+      })
+
+      // Associate student with first vacancy
+      await vacancyToStudentFactory.create({
+        vacancyId: vacancy1.id,
+        studentId: student.id
+      })
+
+      // Try to associate same student with second vacancy in same cycle
+      const res = await app.inject({
+        url: `/vacancies/${vacancy2.id}/associate/${student.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(409)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Student already has a vacancy association for this cycle')
+    })
+
+    it('Returns 400 when vacancy has no available slots', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        slots: 2, // Only 2 slots available
+        disabled: false
+      })
+      
+      // Create and associate 2 students to fill all slots
+      const [student1, student2, student3] = await Promise.all([
+        studentFactory.create({ careerId: career.id }),
+        studentFactory.create({ careerId: career.id }),
+        studentFactory.create({ careerId: career.id })
+      ])
+
+      // Fill all available slots
+      await Promise.all([
+        vacancyToStudentFactory.create({
+          vacancyId: vacancy.id,
+          studentId: student1.id
+        }),
+        vacancyToStudentFactory.create({
+          vacancyId: vacancy.id,
+          studentId: student2.id
+        })
+      ])
+
+      // Try to associate third student when no slots available
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/associate/${student3.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(400)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Vacancy has no available slots')
+    })
+
+    it('Success associate student from different cycle', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const [cycle1, cycle2] = await Promise.all([
+        cycleFactory.create({ slug: '2024A' }),
+        cycleFactory.create({ slug: '2024B' })
+      ])
+      
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      
+      const [vacancy1, vacancy2] = await Promise.all([
+        vacancyFactory.create({
+          cycleId: cycle1.id,
+          departmentId: department.id,
+          disabled: false
+        }),
+        vacancyFactory.create({
+          cycleId: cycle2.id,
+          departmentId: department.id,
+          disabled: false
+        })
+      ])
+      
+      const student = await studentFactory.create({
+        careerId: career.id
+      })
+
+      // Associate student with vacancy from cycle1
+      await vacancyToStudentFactory.create({
+        vacancyId: vacancy1.id,
+        studentId: student.id
+      })
+
+      // Should be able to associate same student with vacancy from different cycle
+      const res = await app.inject({
+        url: `/vacancies/${vacancy2.id}/associate/${student.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(201)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Student successfully associated with vacancy')
+    })
+
+    it('Returns 400 when no authorization token provided', async () => {
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        disabled: false
+      })
+      
+      const student = await studentFactory.create({
+        careerId: career.id
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/associate/${student.id}`,
+        method: METHOD
+      })
+      
+      expect(res.statusCode).toBe(400)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'headers must have required property \'authorization\'')
+    })
+
+    it('Returns 403 when user lacks EDIT_VACANCY permission', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'base',
+        permissions: [] // No permissions
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        disabled: false
+      })
+      
+      const student = await studentFactory.create({
+        careerId: career.id
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/associate/${student.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(403)
+    })
+
+    it('Returns 400 when vacancyId is not a valid integer', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const career = await careerFactory.create()
+      const student = await studentFactory.create({
+        careerId: career.id
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/invalid-id/associate/${student.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(400)
+    })
+
+    it('Returns 400 when studentId is not a valid integer', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: ['EDIT_VACANCY']
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        disabled: false
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/associate/invalid-id`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(400)
+    })
+
+    it('Success associate multiple students to same vacancy within slot limit', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'admin'
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        slots: 3,
+        disabled: false
+      })
+      
+      const [student1, student2] = await Promise.all([
+        studentFactory.create({ careerId: career.id }),
+        studentFactory.create({ careerId: career.id })
+      ])
+
+      // Associate first student
+      const res1 = await app.inject({
+        url: `/vacancies/${vacancy.id}/associate/${student1.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res1.statusCode).toBe(201)
+
+      // Associate second student
+      const res2 = await app.inject({
+        url: `/vacancies/${vacancy.id}/associate/${student2.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res2.statusCode).toBe(201)
+      const body = res2.json()
+      expect(body).toHaveProperty('message', 'Student successfully associated with vacancy')
+    })
+  })
 })

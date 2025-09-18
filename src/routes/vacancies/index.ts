@@ -6,6 +6,8 @@ import buildVerifyUserToken from '#src/prehandlers/verify-user-token.js'
 import { PERMISSIONS } from '#src/common/permissions.js'
 import { HttpError } from '#src/common/error.js'
 import pg from 'pg'
+import { fastifyErrorSchema } from '#src/common/schemas.js'
+
 const { DatabaseError } = pg
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
@@ -289,12 +291,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       querystring: vacancyByIdQuerySchema,
       response: {
         200: vacancyResponseSchema,
-        404: {
-          type: 'object',
-          properties: {
-            message: { type: 'string' }
-          }
-        } as const satisfies JSONSchema
+        404: fastifyErrorSchema
       }
     },
     preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_VACANCY]),
@@ -362,12 +359,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       body: updateVacancySchema,
       response: {
         200: vacancyResponseSchema,
-        404: {
-          type: 'object',
-          properties: {
-            message: { type: 'string' }
-          }
-        } as const satisfies JSONSchema
+        404: fastifyErrorSchema
       }
     },
     preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_VACANCY]),
@@ -444,6 +436,72 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       })
 
       await reply.status(200).send(records)
+    }
+  })
+
+  server.route({
+    method: 'POST',
+    url: '/:vacancyId/associate/:studentId',
+    schema: {
+      description: `Endpoint to associate a student with a vacancy. This endpoint require the user permission \`${PERMISSIONS.EDIT_VACANCY}\``,
+      tags: ['Vacancies'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: {
+        type: 'object',
+        properties: {
+          vacancyId: { type: 'integer' },
+          studentId: { type: 'integer' }
+        },
+        required: ['vacancyId', 'studentId']
+      } as const satisfies JSONSchema,
+      response: {
+        201: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema,
+        400: fastifyErrorSchema,
+        404: fastifyErrorSchema,
+        409: fastifyErrorSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_VACANCY]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const { vacancyId, studentId } = request.params
+
+      const vacancy = await services.vacancyService().findById(vacancyId)
+      if (!vacancy) {
+        throw new HttpError('Vacancy not found', 404)
+      }
+
+      if (vacancy.disabled) {
+        throw new HttpError('Cannot associate to inactive vacancy', 409)
+      }
+
+      const student = await services.studentService().findById(studentId)
+      if (!student) {
+        throw new HttpError('Student not found', 404)
+      }
+
+      const validation = await services.vacancyService().validateAssociation(vacancyId, studentId, vacancy.cycleId)
+      if (!validation.isValid) {
+        const statusCode = validation.error === 'VACANCY_NO_SLOTS' ? 400 : 409
+        throw new HttpError(validation.message!, statusCode)
+      }
+
+      await services.vacancyService().createAssociation(vacancyId, studentId)
+
+      await reply.status(201).send({
+        message: 'Student successfully associated with vacancy'
+      })
     }
   })
 }

@@ -4,7 +4,8 @@ import type {
   FindByIdOpts,
   VacancyServiceConfigI,
   CreateVacancy,
-  UpdateVacancy
+  UpdateVacancy,
+  VacancyAssociationValidationResult
 } from './types.js'
 import type { ModuleConstructorParams } from '#src/service/types.js'
 import type { Knex } from 'knex'
@@ -283,5 +284,82 @@ export class VacancyService implements VacancyServiceI {
     }
 
     return updatedVacancy
+  }
+
+  async validateAssociation (vacancyId: number, studentId: number, vacancyCycleId: number): Promise<VacancyAssociationValidationResult> {
+    const db = this.db
+
+    // Check if student already has a vacancy association for the same cycle
+    const existingCycleAssociation = await db.table('VacanciesToStudents')
+      .join('Vacancies', 'VacanciesToStudents.vacancyId', '=', 'Vacancies.id')
+      .where('VacanciesToStudents.studentId', '=', studentId)
+      .where('Vacancies.cycleId', '=', vacancyCycleId)
+      .first()
+
+    if (existingCycleAssociation) {
+      return {
+        isValid: false,
+        error: 'STUDENT_HAS_CYCLE_ASSOCIATION',
+        message: 'Student already has a vacancy association for this cycle'
+      }
+    }
+
+    // Check if vacancy has available slots
+    const currentAssociations = await db.table('VacanciesToStudents')
+      .where('vacancyId', '=', vacancyId)
+      .count({ count: '*' })
+      .first()
+
+    const vacancy = await db.table('Vacancies')
+      .where('id', '=', vacancyId)
+      .select('slots')
+      .first()
+
+    if (!vacancy) {
+      return {
+        isValid: false,
+        error: 'VACANCY_NO_SLOTS',
+        message: 'Vacancy not found'
+      }
+    }
+
+    const currentCount = Number(currentAssociations?.count || 0)
+    if (currentCount >= vacancy.slots) {
+      return {
+        isValid: false,
+        error: 'VACANCY_NO_SLOTS',
+        message: 'Vacancy has no available slots'
+      }
+    }
+
+    // Check if association already exists
+    const duplicateAssociation = await db.table('VacanciesToStudents')
+      .where('vacancyId', '=', vacancyId)
+      .where('studentId', '=', studentId)
+      .first()
+
+    if (duplicateAssociation) {
+      return {
+        isValid: false,
+        error: 'ASSOCIATION_EXISTS',
+        message: 'Student is already associated with this vacancy'
+      }
+    }
+
+    return {
+      isValid: true
+    }
+  }
+
+  async createAssociation (vacancyId: number, studentId: number): Promise<void> {
+    const db = this.db
+
+    await db.table('VacanciesToStudents')
+      .insert({
+        vacancyId,
+        studentId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
   }
 }

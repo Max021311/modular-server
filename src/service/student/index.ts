@@ -183,8 +183,8 @@ export class StudentService implements StudentServiceI {
     return result
   }
 
-  async findById (id: number, opts: FindByIdOpts): Promise<StudentWithCareer | null> {
-    const includeCareer = opts.includeCareer ?? false
+  async findById (id: number, opts?: FindByIdOpts): Promise<StudentWithCareer | null> {
+    const includeCareer = opts?.includeCareer ?? false
     const baseQuery = this.selectQuery
     let selectQuery: typeof this.selectQuery | ReturnType<typeof this.applyCareerJoin> = baseQuery
 
