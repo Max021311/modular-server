@@ -184,6 +184,103 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       })
     }
   })
+
+  const updateStatusBodySchema = {
+    type: 'object',
+    properties: {
+      status: { type: 'string', enum: ['APPROVED', 'REJECTED'], description: 'New status for the comission office' }
+    },
+    required: ['status']
+  } as const satisfies JSONSchema
+
+  const updateStatusResponseSchema = {
+    type: 'object',
+    properties: {
+      id: { type: 'integer' },
+      studentId: { type: 'integer' },
+      vacancyId: { type: 'integer' },
+      cycleId: { type: 'integer' },
+      beginDate: { type: 'string', format: 'date' },
+      status: { type: 'string', enum: ['APPROVED', 'REJECTED', 'PENDING'] },
+      fileId: { type: 'integer' },
+      createdAt: { type: 'string', format: 'date-time' },
+      updatedAt: { type: 'string', format: 'date-time' }
+    },
+    required: ['id', 'studentId', 'vacancyId', 'cycleId', 'beginDate', 'status', 'fileId', 'createdAt', 'updatedAt']
+  } as const satisfies JSONSchema
+
+  server.route({
+    method: 'PATCH',
+    url: '/:id',
+    schema: {
+      description: `Endpoint to update the status of a comission office. Only allows changing from PENDING to APPROVED or REJECTED. This endpoint requires the user permission \`${PERMISSIONS.EDIT_STUDENT}\``,
+      tags: ['ComissionOffices'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', description: 'ComissionOffice ID' }
+        },
+        required: ['id']
+      } as const satisfies JSONSchema,
+      body: updateStatusBodySchema,
+      response: {
+        200: updateStatusResponseSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema,
+        409: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_STUDENT]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const { id } = request.params
+      const { status } = request.body
+
+      // First, get the current record to check its current status
+      const currentRecord = await services.comissionOfficeService().getById(id)
+
+      if (!currentRecord) {
+        await reply.status(404).send({
+          message: 'Comission office not found'
+        })
+        return
+      }
+
+      // Validate that current status is PENDING
+      if (currentRecord.status !== 'PENDING') {
+        await reply.status(409).send({
+          message: 'Cannot change status. Only PENDING status can be changed to APPROVED or REJECTED.'
+        })
+        return
+      }
+
+      // Update the status
+      const updatedRecord = await services.comissionOfficeService().update(id, { status })
+
+      await reply.status(200).send({
+        ...updatedRecord,
+        beginDate: updatedRecord.beginDate.toISOString().split('T')[0],
+        createdAt: updatedRecord.createdAt.toISOString(),
+        updatedAt: updatedRecord.updatedAt.toISOString()
+      })
+    }
+  })
 }
 
 export default routesPlugin

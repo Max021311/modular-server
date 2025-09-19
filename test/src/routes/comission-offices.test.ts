@@ -840,5 +840,798 @@ describe('ComissionOffices API', () => {
       expect(record.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
       expect(record.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
     })
+
+    it('Success get comission offices with includeCycle parameter', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create({ slug: '2024A', isCurrent: true })
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create()
+      
+      const student = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      await comissionOfficeFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id 
+      })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          includeCycle: 'true'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(1)
+      expect(body.records).toHaveLength(1)
+
+      const record = body.records[0]
+      
+      // Verify cycle association is included
+      expect(record).toHaveProperty('cycle')
+      expect(record.cycle).toHaveProperty('id', cycle.id)
+      expect(record.cycle).toHaveProperty('slug', cycle.slug)
+      expect(record.cycle).toHaveProperty('isCurrent', cycle.isCurrent)
+      expect(record.cycle).toHaveProperty('createdAt')
+      expect(record.cycle).toHaveProperty('updatedAt')
+      
+      // Verify other associations are not included
+      expect(record).not.toHaveProperty('student')
+      expect(record).not.toHaveProperty('vacancy')
+    })
+
+    it('Success get comission offices with includeStudent parameter', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create()
+      
+      const student = await studentFactory.create({ 
+        careerId: career.id,
+        name: 'John Doe',
+        code: 'ST001',
+        email: 'john@example.com',
+        telephone: '123456789'
+      })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      await comissionOfficeFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id 
+      })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          includeStudent: 'true'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(1)
+      expect(body.records).toHaveLength(1)
+
+      const record = body.records[0]
+      
+      // Verify student association is included
+      expect(record).toHaveProperty('student')
+      expect(record.student).toHaveProperty('id', student.id)
+      expect(record.student).toHaveProperty('name', student.name)
+      expect(record.student).toHaveProperty('code', student.code)
+      expect(record.student).toHaveProperty('careerId', student.careerId)
+      expect(record.student).toHaveProperty('email', student.email)
+      expect(record.student).toHaveProperty('telephone', student.telephone)
+      expect(record.student).toHaveProperty('createdAt')
+      expect(record.student).toHaveProperty('updatedAt')
+      
+      // Verify other associations are not included
+      expect(record).not.toHaveProperty('cycle')
+      expect(record).not.toHaveProperty('vacancy')
+    })
+
+    it('Success get comission offices with includeVacancy parameter', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create()
+      
+      const student = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id,
+        name: 'Software Developer Internship',
+        description: 'Full-stack development position',
+        slots: 5,
+        disabled: false
+      })
+
+      await comissionOfficeFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id 
+      })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          includeVacancy: 'true'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(1)
+      expect(body.records).toHaveLength(1)
+
+      const record = body.records[0]
+      
+      // Verify vacancy association is included
+      expect(record).toHaveProperty('vacancy')
+      expect(record.vacancy).toHaveProperty('id', vacancy.id)
+      expect(record.vacancy).toHaveProperty('name', vacancy.name)
+      expect(record.vacancy).toHaveProperty('description', vacancy.description)
+      expect(record.vacancy).toHaveProperty('slots', vacancy.slots)
+      expect(record.vacancy).toHaveProperty('cycleId', vacancy.cycleId)
+      expect(record.vacancy).toHaveProperty('departmentId', vacancy.departmentId)
+      expect(record.vacancy).toHaveProperty('disabled', vacancy.disabled)
+      expect(record.vacancy).toHaveProperty('createdAt')
+      expect(record.vacancy).toHaveProperty('updatedAt')
+      
+      // Verify other associations are not included
+      expect(record).not.toHaveProperty('cycle')
+      expect(record).not.toHaveProperty('student')
+    })
+
+    it('Success get comission offices with multiple include parameters', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create({ slug: '2024A', isCurrent: true })
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create()
+      
+      const student = await studentFactory.create({ 
+        careerId: career.id,
+        name: 'Jane Smith',
+        code: 'ST002'
+      })
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id,
+        name: 'Data Analyst Internship',
+        slots: 3
+      })
+
+      await comissionOfficeFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id 
+      })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          includeCycle: 'true',
+          includeStudent: 'true',
+          includeVacancy: 'true'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(1)
+      expect(body.records).toHaveLength(1)
+
+      const record = body.records[0]
+      
+      // Verify all associations are included
+      expect(record).toHaveProperty('cycle')
+      expect(record.cycle).toHaveProperty('id', cycle.id)
+      expect(record.cycle).toHaveProperty('slug', cycle.slug)
+      
+      expect(record).toHaveProperty('student')
+      expect(record.student).toHaveProperty('id', student.id)
+      expect(record.student).toHaveProperty('name', student.name)
+      expect(record.student).toHaveProperty('code', student.code)
+      
+      expect(record).toHaveProperty('vacancy')
+      expect(record.vacancy).toHaveProperty('id', vacancy.id)
+      expect(record.vacancy).toHaveProperty('name', vacancy.name)
+      expect(record.vacancy).toHaveProperty('slots', vacancy.slots)
+      
+      // Verify date formatting for all associations
+      expect(typeof record.cycle.createdAt).toBe('string')
+      expect(typeof record.cycle.updatedAt).toBe('string')
+      expect(typeof record.student.createdAt).toBe('string')
+      expect(typeof record.student.updatedAt).toBe('string')
+      expect(typeof record.vacancy.createdAt).toBe('string')
+      expect(typeof record.vacancy.updatedAt).toBe('string')
+    })
+
+    it('Success get comission offices without include parameters should not return associations', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create()
+      
+      const student = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      await comissionOfficeFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id 
+      })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(1)
+      expect(body.records).toHaveLength(1)
+
+      const record = body.records[0]
+      
+      // Verify no associations are included
+      expect(record).not.toHaveProperty('cycle')
+      expect(record).not.toHaveProperty('student')
+      expect(record).not.toHaveProperty('vacancy')
+      
+      // Verify basic fields are still present
+      expect(record).toHaveProperty('id')
+      expect(record).toHaveProperty('studentId')
+      expect(record).toHaveProperty('vacancyId')
+      expect(record).toHaveProperty('cycleId')
+      expect(record).toHaveProperty('beginDate')
+      expect(record).toHaveProperty('status')
+      expect(record).toHaveProperty('fileId')
+      expect(record).toHaveProperty('createdAt')
+      expect(record).toHaveProperty('updatedAt')
+    })
+  })
+
+  describe('PATCH /comission-offices/:id', () => {
+    const METHOD = 'PATCH'
+
+    it('Success update comission office status from PENDING to APPROVED', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create()
+      
+      const student = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      const comissionOffice = await comissionOfficeFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id,
+        status: 'PENDING'
+      })
+
+      const res = await app.inject({
+        url: `/comission-offices/${comissionOffice.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: {
+          status: 'APPROVED'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body).toHaveProperty('id', comissionOffice.id)
+      expect(body).toHaveProperty('status', 'APPROVED')
+      expect(body).toHaveProperty('studentId', student.id)
+      expect(body).toHaveProperty('vacancyId', vacancy.id)
+      expect(body).toHaveProperty('cycleId', cycle.id)
+      expect(body).toHaveProperty('fileId', file.id)
+      expect(body).toHaveProperty('beginDate')
+      expect(body).toHaveProperty('createdAt')
+      expect(body).toHaveProperty('updatedAt')
+      
+      // Verify updatedAt has changed
+      expect(new Date(body.updatedAt).getTime()).toBeGreaterThan(new Date(comissionOffice.updatedAt).getTime())
+    })
+
+    it('Success update comission office status from PENDING to REJECTED', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create()
+      
+      const student = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      const comissionOffice = await comissionOfficeFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id,
+        status: 'PENDING'
+      })
+
+      const res = await app.inject({
+        url: `/comission-offices/${comissionOffice.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: {
+          status: 'REJECTED'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body).toHaveProperty('id', comissionOffice.id)
+      expect(body).toHaveProperty('status', 'REJECTED')
+      expect(body).toHaveProperty('studentId', student.id)
+      expect(body).toHaveProperty('vacancyId', vacancy.id)
+      expect(body).toHaveProperty('cycleId', cycle.id)
+      expect(body).toHaveProperty('fileId', file.id)
+    })
+
+    it('Returns 409 when trying to update status from APPROVED', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create()
+      
+      const student = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      const comissionOffice = await comissionOfficeFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id,
+        status: 'APPROVED'
+      })
+
+      const res = await app.inject({
+        url: `/comission-offices/${comissionOffice.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: {
+          status: 'REJECTED'
+        }
+      })
+      
+      expect(res.statusCode).toBe(409)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Cannot change status. Only PENDING status can be changed to APPROVED or REJECTED.')
+    })
+
+    it('Returns 409 when trying to update status from REJECTED', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create()
+      
+      const student = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      const comissionOffice = await comissionOfficeFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id,
+        status: 'REJECTED'
+      })
+
+      const res = await app.inject({
+        url: `/comission-offices/${comissionOffice.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: {
+          status: 'APPROVED'
+        }
+      })
+      
+      expect(res.statusCode).toBe(409)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Cannot change status. Only PENDING status can be changed to APPROVED or REJECTED.')
+    })
+
+    it('Returns 404 when comission office does not exist', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: '/comission-offices/99999',
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: {
+          status: 'APPROVED'
+        }
+      })
+      
+      expect(res.statusCode).toBe(404)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Comission office not found')
+    })
+
+    it('Returns 400 when no authorization token provided', async () => {
+      const res = await app.inject({
+        url: '/comission-offices/1',
+        method: METHOD,
+        payload: {
+          status: 'APPROVED'
+        }
+      })
+      
+      expect(res.statusCode).toBe(400)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'headers must have required property \'authorization\'')
+    })
+
+    it('Returns 403 when user lacks EDIT_STUDENT permission', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'base',
+        permissions: [] // No permissions
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: '/comission-offices/1',
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: {
+          status: 'APPROVED'
+        }
+      })
+      
+      expect(res.statusCode).toBe(403)
+    })
+
+    it('Returns 400 when status is not provided in body', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: '/comission-offices/1',
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: {}
+      })
+      
+      expect(res.statusCode).toBe(400)
+      const body = res.json()
+      expect(body).toHaveProperty('message')
+      expect(body.message).toContain('must have required property \'status\'')
+    })
+
+    it('Returns 400 when status is invalid', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: '/comission-offices/1',
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: {
+          status: 'PENDING'
+        }
+      })
+      
+      expect(res.statusCode).toBe(400)
+      const body = res.json()
+      expect(body).toHaveProperty('message')
+      expect(body.message).toContain('must be equal to one of the allowed values')
+    })
+
+    it('Success verify date formatting in response', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create()
+      
+      const student = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      const comissionOffice = await comissionOfficeFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id,
+        status: 'PENDING'
+      })
+
+      const res = await app.inject({
+        url: `/comission-offices/${comissionOffice.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: {
+          status: 'APPROVED'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      
+      // Verify dates are formatted correctly
+      expect(typeof body.beginDate).toBe('string')
+      expect(typeof body.createdAt).toBe('string')
+      expect(typeof body.updatedAt).toBe('string')
+      expect(() => new Date(body.beginDate)).not.toThrow()
+      expect(() => new Date(body.createdAt)).not.toThrow()
+      expect(() => new Date(body.updatedAt)).not.toThrow()
+      
+      // Verify beginDate is formatted as date (YYYY-MM-DD)
+      expect(body.beginDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      
+      // Verify createdAt and updatedAt are formatted as ISO strings
+      expect(body.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+      expect(body.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+    })
   })
 })
