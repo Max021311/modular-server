@@ -11,4 +11,4 @@ export interface ComissionOffice {
 }
 
 export type CreateComissionOffice = Omit<ComissionOffice, 'id'>
-export type UpdateComissionOffice = Omit<ComissionOffice, 'id'|'createdAt'|'beginDate'|'cycleId'|'vacancyId'|'studentId'>
+export type UpdateComissionOffice = Partial<Omit<ComissionOffice, 'id'|'createdAt'|'beginDate'|'cycleId'|'vacancyId'|'studentId'>>
