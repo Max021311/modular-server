@@ -8,6 +8,8 @@ import type { TemplateRenderI } from '#src/service/template-render/types.js'
 import type { DepartmentServiceI } from '#src/service/department/types.js'
 import type { CycleServiceI } from '#src/service/cycle/types.js'
 import type { VacancyServiceI } from '#src/service/vacancy/types.js'
+import type { FileServiceI } from './file/types.js'
+import type { ComissionOfficeServiceI } from './comission-office/types.js'
 import type { BaseLogger } from 'pino'
 import type { ConnectionManager } from '#src/common/bd/index.js'
 
@@ -24,6 +26,8 @@ export interface Services {
   departmentService: () => DepartmentServiceI
   cycleService: () => CycleServiceI
   vacancyService: () => VacancyServiceI
+  fileService: () => FileServiceI
+  comissionOfficeService: () => ComissionOfficeServiceI
 }
 
 export interface ApplicationContext <T extends (keyof Services | unknown) = keyof Services> {

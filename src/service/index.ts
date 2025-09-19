@@ -12,6 +12,8 @@ import { CycleService } from './cycle/index.js'
 import { ConnectionManager } from '#src/common/bd/index.js'
 import { CareerService } from './career/index.js'
 import { VacancyService } from './vacancy/index.js'
+import { FileService } from './file/index.js'
+import { ComissionOfficeService } from './comission-office/index.js'
 
 interface GetServicesParams {
   logger: Logger
@@ -71,6 +73,12 @@ export function getServices (params: GetServicesParams): Services {
     config: {
       textSearch: configuration.textSearch
     }
+  })
+  context.services.fileService = lazyLoad((p) => new FileService(p), {
+    context
+  })
+  context.services.comissionOfficeService = lazyLoad((p) => new ComissionOfficeService(p), {
+    context
   })
   return context.services
 }
