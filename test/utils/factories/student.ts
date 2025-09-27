@@ -1,7 +1,7 @@
 import { Factory } from 'fishery'
-import { Student, CreateStudent } from '#src/types/student'
+import { Student, CreateStudent } from '#src/types/student.js'
 import { faker } from '@faker-js/faker'
-import connectionManager from '#src/common/bd'
+import connectionManager from '#src/common/bd/index.js'
 import bcrypt from 'bcrypt'
 
 class StudentFactory extends Factory<CreateStudent, null, Student> {

@@ -60,7 +60,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       email: { type: 'string' },
       telephone: { type: 'string' },
       createdAt: { type: 'string', format: 'date-time' },
-      updatedAt: { type: 'string', format: 'date-time' }
+      updatedAt: { type: 'string', format: 'date-time' },
+      deletedAt: { type: 'string', format: 'date-time', nullable: true }
     }
   } as const satisfies JSONSchema
 
@@ -108,20 +109,6 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     }
   } as const satisfies JSONSchema
 
-  const loginBodySchema = {
-    type: 'object',
-    properties: {
-      email: {
-        type: 'string',
-        format: 'email'
-      },
-      password: {
-        type: 'string'
-      }
-    },
-    required: ['email', 'password']
-  } as const satisfies JSONSchema
-
   const updateStudentBodySchema = {
     type: 'object',
     properties: {
@@ -144,30 +131,6 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     },
     additionalProperties: false
   } as const satisfies JSONSchema
-
-  server.route({
-    method: 'POST',
-    url: '/auth',
-    schema: {
-      description: 'Allow log in as an student user',
-      tags: ['Students'],
-      body: loginBodySchema,
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            token: { type: 'string' }
-          },
-          required: ['token'],
-          additionalProperties: false
-        } as const satisfies JSONSchema
-      }
-    },
-    async handler (request, reply) {
-      const token = await request.server.services.studentService().login(request.body.email, request.body.password)
-      await reply.status(200).send({ token })
-    }
-  })
 
   server.route({
     method: 'POST',
@@ -385,6 +348,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         ...student,
         createdAt: student.createdAt.toISOString(),
         updatedAt: student.updatedAt.toISOString(),
+        deletedAt: student.deletedAt === null ? null : student.deletedAt.toISOString(),
         career: student.career !== undefined
           ? {
               ...student.career,
@@ -431,6 +395,144 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
 
       await services.studentService().updateStudent(id, updateData)
       await reply.status(204).send(null)
+    }
+  })
+
+  server.route({
+    method: 'PATCH',
+    url: '/:id/deactivate',
+    schema: {
+      description: `Endpoint to deactivate a student (soft delete). This endpoint require the user permission \`${PERMISSIONS.EDIT_STUDENT}\``,
+      tags: ['Students'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', description: 'Student ID' }
+        },
+        required: ['id']
+      } as const satisfies JSONSchema,
+      response: {
+        200: studentResponseSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema,
+        409: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_STUDENT]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const { id } = request.params
+
+      const studentWithDeletedAt = await services.studentService().findById(id)
+
+      if (!studentWithDeletedAt) {
+        await reply.status(404).send({
+          message: 'Student not found'
+        })
+        return
+      }
+
+      if (studentWithDeletedAt.deletedAt) {
+        await reply.status(409).send({
+          message: 'Student is already deactivated'
+        })
+        return
+      }
+
+      // Deactivate the student
+      const updatedStudent = await services.studentService().deactivate(id)
+
+      await reply.status(200).send({
+        ...updatedStudent,
+        createdAt: updatedStudent.createdAt.toISOString(),
+        updatedAt: updatedStudent.updatedAt.toISOString(),
+        deletedAt: updatedStudent.deletedAt === null ? null : updatedStudent.deletedAt.toISOString()
+      })
+    }
+  })
+
+  server.route({
+    method: 'PATCH',
+    url: '/:id/activate',
+    schema: {
+      description: `Endpoint to activate a student (restore from soft delete). This endpoint require the user permission \`${PERMISSIONS.EDIT_STUDENT}\``,
+      tags: ['Students'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', description: 'Student ID' }
+        },
+        required: ['id']
+      } as const satisfies JSONSchema,
+      response: {
+        200: studentResponseSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema,
+        409: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_STUDENT]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const { id } = request.params
+
+      const studentWithDeletedAt = await services.studentService().findById(id)
+
+      if (!studentWithDeletedAt) {
+        await reply.status(404).send({
+          message: 'Student not found'
+        })
+        return
+      }
+
+      if (!studentWithDeletedAt.deletedAt) {
+        await reply.status(409).send({
+          message: 'Student is already active'
+        })
+        return
+      }
+
+      // Activate the student
+      const updatedStudent = await services.studentService().activate(id)
+
+      await reply.status(200).send({
+        ...updatedStudent,
+        createdAt: updatedStudent.createdAt.toISOString(),
+        updatedAt: updatedStudent.updatedAt.toISOString(),
+        deletedAt: updatedStudent.deletedAt === null ? null : updatedStudent.deletedAt.toISOString()
+      })
     }
   })
 }
