@@ -1,9 +1,11 @@
 {
-    "outputDirectory": "build",
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/src/serverless.ts"
-        }
-    ]
+  "outputDirectory": "build",
+  "buildCommand": "yarn build",
+  "installCommand": "yarn install",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/serverless"
+    }
+  ]
 }
