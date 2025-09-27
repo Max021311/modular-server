@@ -7,6 +7,8 @@ import type { Cycle, CreateCycle, UpdateCycle } from './cycles.js'
 import type { Vacancy, CreateVacancy, UpdateVacancy } from './vacancy.js'
 import type { VacancyToStudent, CreateVacancyToStudent, UpdateVacancyToStudent } from './vacancyToStudent.js'
 import type { ComissionOffice, CreateComissionOffice, UpdateComissionOffice } from './comission-office.js'
+import type { FinalReport, CreateFinalReport, UpdateFinalReport } from './final-report.js'
+import type { Report, CreateReport, UpdateReport } from './report.js'
 
 declare module 'knex/types/tables.js' {
   interface Tables {
@@ -18,5 +20,7 @@ declare module 'knex/types/tables.js' {
     Vacancies: Knex.CompositeTableType<Vacancy, CreateVacancy, UpdateVacancy>
     VacanciesToStudents: Knex.CompositeTableType<VacancyToStudent, CreateVacancyToStudent, UpdateVacancyToStudent>
     ComissionOffices: Knex.CompositeTableType<ComissionOffice, CreateComissionOffice, UpdateComissionOffice>
+    FinalReports: Knex.CompositeTableType<FinalReport, CreateFinalReport, UpdateFinalReport>
+    Reports: Knex.CompositeTableType<Report, CreateReport, UpdateReport>
   }
 }
