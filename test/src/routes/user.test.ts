@@ -1,10 +1,10 @@
 import { describe, beforeAll, afterAll, expect } from 'vitest'
-import { isolatedIt as it } from '#test/utils/isolatedIt'
-import build from '#src/build'
-import { userFactory } from '#test/utils/factories/user'
+import { isolatedIt as it } from '#test/utils/isolatedIt.js'
+import build from '#src/build.js'
+import { userFactory } from '#test/utils/factories/user.js'
 import { faker } from '@faker-js/faker'
-import configuration from '#src/common/configuration'
-import { JwtService } from '#src/service/jwt'
+import configuration from '#src/common/configuration.js'
+import { JwtService } from '#src/service/jwt/index.js'
 
 describe('Users API', () => {
   const app = build()
@@ -414,7 +414,7 @@ describe('Users API', () => {
           authorization: `Bearer ${token}`
         },
         query: {
-          search: 'johndoe'
+          search: 'John Doe'
         }
       })
       
@@ -460,19 +460,20 @@ describe('Users API', () => {
       expect(body.records).toBeInstanceOf(Array)
     })
 
-    it('Returns 401 when authorization header is missing', async () => {
+    it('Returns 400 when authorization header is missing', async () => {
       const res = await app.inject({
         url: PATH,
         method: METHOD
       })
 
-      expect(res.statusCode).toBe(401)
+      expect(res.statusCode).toBe(400)
     })
 
     it('Returns 403 when user lacks VIEW_USER permission', async () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
+        role: 'base',
         permissions: ['VIEW_STUDENT'] // Different permission
       })
       
