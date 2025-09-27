@@ -6,6 +6,7 @@ import buildVerifyUserToken from '../prehandlers/verify-user-token.js'
 import { PERMISSIONS } from '#src/common/permissions.js'
 import config from '#src/common/configuration.js'
 import { HttpError } from '#src/common/error.js'
+import { orderQueryToOrder } from '#src/common/order-query.js'
 import jwt from 'jsonwebtoken'
 const { TokenExpiredError, JsonWebTokenError, NotBeforeError } = jwt
 
@@ -57,6 +58,47 @@ export default fp(async function RoutesPlugin (fastify) {
       }
     },
     required: ['password']
+  } as const satisfies JSONSchema
+
+  const userResponseSchema = {
+    type: 'object',
+    properties: {
+      id: { type: 'integer' },
+      name: { type: 'string' },
+      user: { type: 'string' },
+      role: { type: 'string' },
+      permissions: {
+        type: 'array',
+        items: { type: 'string' }
+      },
+      createdAt: { type: 'string', format: 'date-time' },
+      updatedAt: { type: 'string', format: 'date-time' }
+    },
+    required: ['id', 'name', 'user', 'role', 'permissions', 'createdAt', 'updatedAt']
+  } as const satisfies JSONSchema
+
+  const usersQuerySchema = {
+    type: 'object',
+    properties: {
+      order: {
+        type: 'string',
+        enum: ['Users.createdAt', '-Users.createdAt', 'Users.id', '-Users.id', 'Users.name', '-Users.name', 'Users.user', '-Users.user'],
+        description: "Order by the field name. A minus(-) means that we'll order the file collections in descending order.",
+        default: '-Users.createdAt'
+      },
+      limit: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 50,
+        default: 10
+      },
+      offset: {
+        type: 'integer',
+        minimum: 0,
+        default: 0
+      },
+      search: { type: 'string' }
+    }
   } as const satisfies JSONSchema
 
   server.route({
@@ -186,6 +228,63 @@ export default fp(async function RoutesPlugin (fastify) {
 
       const user = await services.userService().create(userData)
       await reply.status(201).send(user)
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    url: '/users',
+    schema: {
+      description: `Endpoint to get users with pagination, search and ordering. This endpoint require the user permission \`${PERMISSIONS.VIEW_USER}\``,
+      tags: ['Users'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      querystring: usersQuerySchema,
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            total: { type: 'integer' },
+            records: {
+              type: 'array',
+              items: userResponseSchema
+            }
+          }
+        } as const satisfies JSONSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_USER]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const {
+        limit = 10,
+        offset = 0,
+        order,
+        search
+      } = request.query
+
+      const result = await services.userService().findAndCount({
+        limit,
+        offset,
+        order: orderQueryToOrder(order) ?? undefined,
+        search
+      })
+
+      const records = result.records.map(record => ({
+        ...record,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString()
+      }))
+
+      await reply.status(200).send({
+        total: result.total,
+        records
+      })
     }
   })
 })

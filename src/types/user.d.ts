@@ -9,8 +9,9 @@ export interface User {
   permissions: PERMISSIONS[]
   createdAt: Date
   updatedAt: Date
+  search_vector: string
 }
 
-export type CreateUser = Omit<User, 'id'>
-export type UpdateUser = Partial<Omit<User, 'id'|'createdAt'>>
+export type CreateUser = Omit<User, 'id' | 'search_vector'>
+export type UpdateUser = Partial<Omit<User, 'id'|'createdAt'|'search_vector'>>
 export type UserWithoutPassword = Pick<User, 'id'|'name'|'user'|'role'|'permissions'|'createdAt'|'updatedAt'>

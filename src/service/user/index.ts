@@ -4,25 +4,30 @@ import type { UserTokenPayload } from '#src/service/jwt/types.js'
 import TOKEN_SCOPES from '#src/common/token-scopes.js'
 import type {
   UserServiceI,
-  CreateUser
+  CreateUser,
+  FindAndCountParams,
+  UserServiceConfigI
 } from './types.js'
 import type { ModuleConstructorParams } from '#src/service/types.js'
 import loadPermissions from '#src/common/load-permissions.js'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger'|'services'|'connectionManager',
-  'jwtService'
+  'jwtService',
+  UserServiceConfigI
 >
 
 export class UserService implements UserServiceI {
   private readonly logger: ConstructorParams['context']['logger']
   private readonly services: ConstructorParams['context']['services']
   private readonly connectionManager: ConstructorParams['context']['connectionManager']
+  private readonly config: ConstructorParams['config']
 
   constructor (params: ConstructorParams) {
     this.logger = params.context.logger
     this.services = params.context.services
     this.connectionManager = params.context.connectionManager
+    this.config = params.config
   }
 
   private get db () {
@@ -98,5 +103,42 @@ export class UserService implements UserServiceI {
     const user = await this.getById(payload.id)
     if (user === undefined) throw new HttpError('Unauthorized', 401)
     return payload as UserTokenPayload
+  }
+
+  async findAndCount (params: FindAndCountParams = {}) {
+    const { limit = 10, offset = 0, search, order } = params
+    const db = this.db
+
+    let countQuery = db.table('Users').count({ count: '*' }).first()
+    let selectQuery = this.users()
+      .limit(limit)
+      .offset(offset)
+
+    if (order) {
+      selectQuery = selectQuery.orderBy([
+        { column: order[0], order: order[1] },
+        { column: 'Users.id', order: order[1] }
+      ])
+    } else {
+      selectQuery = selectQuery.orderBy('id', 'desc')
+    }
+
+    if (search) {
+      const { language } = this.config.textSearch
+      selectQuery = selectQuery
+        .whereRaw('search_vector @@ plainto_tsquery(?, ?)', [language, search])
+      countQuery = countQuery
+        .whereRaw('search_vector @@ plainto_tsquery(?, ?)', [language, search])
+    }
+
+    const [total, records] = await Promise.all([
+      countQuery,
+      selectQuery
+    ])
+
+    return {
+      records,
+      total: Number(total?.count ?? 0)
+    }
   }
 }
