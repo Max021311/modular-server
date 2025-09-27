@@ -46,7 +46,8 @@ export class StudentService implements StudentServiceI {
         db.ref('email').withSchema('Students'),
         db.ref('telephone').withSchema('Students'),
         db.ref('createdAt').withSchema('Students'),
-        db.ref('updatedAt').withSchema('Students')
+        db.ref('updatedAt').withSchema('Students'),
+        db.ref('deletedAt').withSchema('Students')
       )
   }
 
@@ -68,6 +69,7 @@ export class StudentService implements StudentServiceI {
       .select(db.ref('password').withSchema('Students'))
       .first()
       .where('email', email)
+      .whereNull('deletedAt')
     if (!user) { throw new HttpError('Wrong user or password', 401) }
 
     const result = await bcrypt.compare(password, user.password)
@@ -125,6 +127,7 @@ export class StudentService implements StudentServiceI {
           telephone: result.telephone,
           createdAt: result.createdAt,
           updatedAt: result.updatedAt,
+          deletedAt: result.deletedAt,
           career: 'career_id' in result
             ? {
                 id: result.career_id,
@@ -155,7 +158,8 @@ export class StudentService implements StudentServiceI {
         'email',
         'telephone',
         'createdAt',
-        'updatedAt'
+        'updatedAt',
+        'deletedAt'
       ])
     this.logger.info(result, 'Student created')
     return result
@@ -177,7 +181,8 @@ export class StudentService implements StudentServiceI {
         'email',
         'telephone',
         'createdAt',
-        'updatedAt'
+        'updatedAt',
+        'deletedAt'
       ])
     this.logger.info(result, 'Student updated')
     return result
@@ -205,6 +210,7 @@ export class StudentService implements StudentServiceI {
       telephone: result.telephone,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
+      deletedAt: result.deletedAt,
       career: 'career_id' in result
         ? {
             id: result.career_id,
@@ -228,8 +234,8 @@ export class StudentService implements StudentServiceI {
   async findStudentsByVacancyId (vacancyId: number): Promise<Required<StudentWithCareer>[]> {
     const selectQuery = this.applyCareerJoin(
       this.selectQuery
-        .where('VacanciesToStudents.vacancyId', '=', vacancyId)
         .innerJoin('VacanciesToStudents', 'Students.id', '=', 'VacanciesToStudents.studentId')
+        .where('VacanciesToStudents.vacancyId', '=', vacancyId)
     )
 
     const records = await selectQuery
@@ -244,6 +250,7 @@ export class StudentService implements StudentServiceI {
         telephone: result.telephone,
         createdAt: result.createdAt,
         updatedAt: result.updatedAt,
+        deletedAt: result.deletedAt,
         career: {
           id: result.career_id,
           name: result.career_name,
@@ -253,5 +260,51 @@ export class StudentService implements StudentServiceI {
         }
       }
     })
+  }
+
+  async deactivate (id: number): Promise<StudentWithouPassword> {
+    const db = this.db
+    const [result] = await db.table('Students')
+      .where({ id })
+      .update({
+        deletedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning([
+        'id',
+        'name',
+        'code',
+        'careerId',
+        'email',
+        'telephone',
+        'createdAt',
+        'updatedAt',
+        'deletedAt'
+      ])
+    this.logger.info(result, 'Student deactivated')
+    return result
+  }
+
+  async activate (id: number): Promise<StudentWithouPassword> {
+    const db = this.db
+    const [result] = await db.table('Students')
+      .where({ id })
+      .update({
+        deletedAt: null,
+        updatedAt: new Date()
+      })
+      .returning([
+        'id',
+        'name',
+        'code',
+        'careerId',
+        'email',
+        'telephone',
+        'createdAt',
+        'updatedAt',
+        'deletedAt'
+      ])
+    this.logger.info(result, 'Student activated')
+    return result
   }
 }

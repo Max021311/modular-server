@@ -3,7 +3,7 @@ import type { Career } from '#src/types/career.js'
 
 export { CreateStudent, UpdateStudent } from '#src/types/student'
 
-export type StudentWithouPasswordFields = 'id'|'name'|'code'|'careerId'|'email'|'telephone'|'createdAt'|'updatedAt'
+export type StudentWithouPasswordFields = 'id'|'name'|'code'|'careerId'|'email'|'telephone'|'createdAt'|'updatedAt'|'deletedAt'
 
 export type StudentWithouPassword = Pick<Student, StudentWithouPasswordFields>
 
@@ -31,6 +31,8 @@ export interface StudentServiceI {
   findById(id: number, opts?: FindByIdOpts): Promise<StudentWithCareer | null>
   findByEmail(email: string): Promise<StudentWithouPassword | null>
   findStudentsByVacancyId(vacancyId: number): Promise<Required<StudentWithCareer>[]>
+  deactivate(id: number): Promise<StudentWithouPassword>
+  activate(id: number): Promise<StudentWithouPassword>
 }
 
 export interface StudentServiceConfigI {
