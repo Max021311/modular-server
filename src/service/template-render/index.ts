@@ -17,7 +17,8 @@ export class TemplateRender implements TemplateRenderI {
 
   render (params: RenderParams) {
     this.logger.debug(params, 'Render template')
-    const templatePath = join('templates/', params.template, params.file)
+    const cwd = process.cwd()
+    const templatePath = join(cwd, 'templates/', params.template, params.file)
     return nunjucks.render(templatePath, params)
   }
 }
