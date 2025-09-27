@@ -2,7 +2,7 @@ import type { UpdateVacancy, CreateVacancy, Vacancy } from '#src/types/vacancy.j
 import type { CyclePicked } from '../cycle/types.js'
 import type { DepartmentPicked } from '../department/types.js'
 
-export type VacancyPicked = Pick<Vacancy, 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'createdAt'|'updatedAt'>
+export type VacancyPicked = Pick<Vacancy, 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'createdAt'|'updatedAt'|'deletedAt'>
 
 export { CreateVacancy, UpdateVacancy } from '#src/types/vacancy.js'
 
@@ -47,4 +47,6 @@ export interface VacancyServiceI {
   update(id: number, vacancy: UpdateVacancy): Promise<VacancyPicked | null>
   validateAssociation(vacancyId: number, studentId: number, vacancyCycleId: number): Promise<VacancyAssociationValidationResult>
   createAssociation(vacancyId: number, studentId: number): Promise<void>
+  activate(id: number): Promise<VacancyPicked>
+  deactivate(id: number): Promise<VacancyPicked>
 }

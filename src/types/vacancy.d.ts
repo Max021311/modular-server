@@ -8,8 +8,9 @@ interface Vacancy {
   disabled: boolean
   createdAt: Date
   updatedAt: Date
+  deletedAt: Date | null
   searchVector: string
 }
 
-export type CreateVacancy = Omit<Vacancy, 'id'|'searchVector'>
+export type CreateVacancy = Omit<Vacancy, 'id'|'searchVector'|'deletedAt'>
 export type UpdateVacancy = Partial<Omit<Vacancy, 'id'|'createdAt'|'searchVector'|'cycleId'|'departmentId'>>

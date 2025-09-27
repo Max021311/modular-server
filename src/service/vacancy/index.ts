@@ -18,7 +18,7 @@ type ConstructorParams = ModuleConstructorParams<
   VacancyServiceConfigI
 >
 
-type Vacancy = Pick<Tables['Vacancies']['base'], 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'createdAt'|'updatedAt'>
+type Vacancy = Pick<Tables['Vacancies']['base'], 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'createdAt'|'updatedAt'|'deletedAt'>
 type CycleJoin = PrefixedPick<Tables['Cycles']['base'], 'id'|'slug'|'isCurrent'|'createdAt'|'updatedAt', 'cycle_'>
 type DepartmentJoin = PrefixedPick<Tables['Departments']['base'], 'id'|'name'|'address'|'phone'|'email'|'chiefName'|'createdAt'|'updatedAt', 'department_'>
 
@@ -51,7 +51,8 @@ export class VacancyService implements VacancyServiceI {
         db.ref('departmentId').withSchema('Vacancies'),
         db.ref('disabled').withSchema('Vacancies'),
         db.ref('createdAt').withSchema('Vacancies'),
-        db.ref('updatedAt').withSchema('Vacancies')
+        db.ref('updatedAt').withSchema('Vacancies'),
+        db.ref('deletedAt').withSchema('Vacancies')
       )
   }
 
@@ -152,6 +153,7 @@ export class VacancyService implements VacancyServiceI {
           disabled: result.disabled,
           createdAt: result.createdAt,
           updatedAt: result.updatedAt,
+          deletedAt: result.deletedAt,
           cycle: 'cycle_id' in result
             ? {
                 id: result.cycle_id,
@@ -204,6 +206,7 @@ export class VacancyService implements VacancyServiceI {
       disabled: result.disabled,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
+      deletedAt: result.deletedAt,
       cycle: 'cycle_id' in result
         ? {
             id: result.cycle_id,
@@ -250,7 +253,8 @@ export class VacancyService implements VacancyServiceI {
       departmentId: result.departmentId,
       disabled: result.disabled,
       createdAt: result.createdAt,
-      updatedAt: result.updatedAt
+      updatedAt: result.updatedAt,
+      deletedAt: result.deletedAt
     }
 
     return createdVacancy
@@ -280,7 +284,8 @@ export class VacancyService implements VacancyServiceI {
       departmentId: result.departmentId,
       disabled: result.disabled,
       createdAt: result.createdAt,
-      updatedAt: result.updatedAt
+      updatedAt: result.updatedAt,
+      deletedAt: result.deletedAt
     }
 
     return updatedVacancy
@@ -361,5 +366,59 @@ export class VacancyService implements VacancyServiceI {
         createdAt: new Date(),
         updatedAt: new Date()
       })
+  }
+
+  async activate (id: number) {
+    const db = this.db
+
+    const [result] = await db.table('Vacancies')
+      .where({ id })
+      .update({
+        deletedAt: null,
+        updatedAt: new Date()
+      })
+      .returning('*')
+
+    const activatedVacancy = {
+      id: result.id,
+      name: result.name,
+      description: result.description,
+      slots: result.slots,
+      cycleId: result.cycleId,
+      departmentId: result.departmentId,
+      disabled: result.disabled,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+      deletedAt: result.deletedAt
+    }
+
+    return activatedVacancy
+  }
+
+  async deactivate (id: number) {
+    const db = this.db
+
+    const [result] = await db.table('Vacancies')
+      .where({ id })
+      .update({
+        deletedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning('*')
+
+    const deactivatedVacancy = {
+      id: result.id,
+      name: result.name,
+      description: result.description,
+      slots: result.slots,
+      cycleId: result.cycleId,
+      departmentId: result.departmentId,
+      disabled: result.disabled,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+      deletedAt: result.deletedAt
+    }
+
+    return deactivatedVacancy
   }
 }
