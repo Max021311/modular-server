@@ -9,12 +9,6 @@ function build () {
   const server = fastify({
     logger: {
       ...options,
-      transport:
-        process.env.NODE_ENV === 'development'
-          ? {
-              target: 'pino-pretty'
-            }
-          : undefined,
       serializers: {
         req (request) {
           return {
@@ -53,7 +47,7 @@ function build () {
       }
     })
     .register(cors, {
-      origin: ['http://localhost:3000']
+      origin: true
     })
     .register(servicesPlugin)
     .register(routesPlugin)
