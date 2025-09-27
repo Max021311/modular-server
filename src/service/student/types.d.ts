@@ -8,7 +8,7 @@ export type StudentWithouPasswordFields = 'id'|'name'|'code'|'careerId'|'email'|
 export type StudentWithouPassword = Pick<Student, StudentWithouPasswordFields>
 
 export type StudentWithCareer = StudentWithouPassword & {
-  career?: Career
+  career?: Omit<Career, 'search_vector'>
 }
 
 export interface FindAndCountParams {

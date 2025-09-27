@@ -122,9 +122,9 @@ export class StudentService implements StudentServiceI {
     if (search) {
       const { language } = this.config.textSearch
       selectQuery = selectQuery
-        .whereRaw('search_vector @@ plainto_tsquery(?, ?)', [language, search])
+        .whereRaw('"Students".search_vector @@ plainto_tsquery(?, ?)', [language, search])
       countQuery = countQuery
-        .whereRaw('search_vector @@ plainto_tsquery(?, ?)', [language, search])
+        .whereRaw('"Students".search_vector @@ plainto_tsquery(?, ?)', [language, search])
     }
 
     if (includeCareer === true) selectQuery = selectQuery.modify(this.applyCareerJoin, db)

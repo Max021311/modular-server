@@ -151,7 +151,9 @@ describe('Students API', () => {
       expect(record).toHaveProperty('code')
       expect(record).toHaveProperty('careerId')
       expect(record).toHaveProperty('career', {
-        ...career,
+        id: career.id,
+        name: career.name,
+        slug: career.slug,
         createdAt: career.createdAt.toISOString(),
         updatedAt: career.updatedAt.toISOString()
       })
@@ -212,7 +214,9 @@ describe('Students API', () => {
       expect(record).toHaveProperty('code')
       expect(record).toHaveProperty('careerId')
       expect(record).toHaveProperty('career', {
-        ...career,
+        id: career.id,
+        name: career.name,
+        slug: career.slug,
         createdAt: career.createdAt.toISOString(),
         updatedAt: career.updatedAt.toISOString()
       })
@@ -352,7 +356,9 @@ describe('Students API', () => {
       expect(body).toHaveProperty('code', student.code)
       expect(body).toHaveProperty('careerId', student.careerId)
       expect(body).toHaveProperty('career', {
-        ...career,
+        id: career.id,
+        name: career.name,
+        slug: career.slug,
         createdAt: career.createdAt.toISOString(),
         updatedAt: career.updatedAt.toISOString()
       })
