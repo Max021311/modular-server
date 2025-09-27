@@ -1,7 +1,7 @@
 import { Factory } from 'fishery'
-import { Career, CreateCareer } from '#src/types/career'
+import { Career, CreateCareer } from '#src/types/career.js'
 import { faker } from '@faker-js/faker'
-import connectionManager from '#src/common/bd'
+import connectionManager from '#src/common/bd/index.js'
 
 class CareerFactory extends Factory<CreateCareer, null, Career> {
 }
