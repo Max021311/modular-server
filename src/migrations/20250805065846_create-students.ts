@@ -11,6 +11,7 @@ export async function up (knex: Knex): Promise<void> {
       table.integer('careerId').references('id').inTable('Careers').notNullable()
       table.timestamp('createdAt').notNullable().index()
       table.timestamp('updatedAt').notNullable()
+      table.timestamp('deletedAt').defaultTo(null)
       table.string('email').unique().notNullable()
       table.string('telephone').unique().notNullable()
     })
