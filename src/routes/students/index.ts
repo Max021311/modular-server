@@ -281,6 +281,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
           ...record,
           createdAt: record.createdAt.toISOString(),
           updatedAt: record.updatedAt.toISOString(),
+          deletedAt: record.deletedAt === null ? null : record.deletedAt.toISOString(),
           career: career !== undefined
             ? {
                 ...career,

@@ -9,6 +9,9 @@ import type {
   FindByIdOpts
 } from './types.js'
 import type { ModuleConstructorParams } from '#src/service/types.js'
+import type { Knex } from 'knex'
+import { Tables } from 'knex/types/tables.js'
+import { PrefixedPick, AtLeastOneJoin } from '#src/types/utils.js'
 import { HttpError } from '#src/common/error.js'
 import bcrypt from 'bcrypt'
 
@@ -17,6 +20,11 @@ type ConstructorParams = ModuleConstructorParams<
   'jwtService',
   StudentServiceConfigI
 >
+
+type Student = Pick<Tables['Students']['base'], 'id'|'name'|'code'|'careerId'|'email'|'telephone'|'createdAt'|'updatedAt'|'deletedAt'>
+type CareerJoin = PrefixedPick<Tables['Careers']['base'], 'id'|'name'|'slug'|'createdAt'|'updatedAt', 'career_'>
+
+type StudentWithJoins = Student & AtLeastOneJoin<[CareerJoin]>
 
 export class StudentService implements StudentServiceI {
   private readonly logger: ConstructorParams['context']['logger']
@@ -38,7 +46,7 @@ export class StudentService implements StudentServiceI {
   private get selectQuery () {
     const db = this.db
     return db.table('Students')
-      .select(
+      .select<StudentWithJoins[]>(
         db.ref('id').withSchema('Students'),
         db.ref('name').withSchema('Students'),
         db.ref('code').withSchema('Students'),
@@ -51,8 +59,7 @@ export class StudentService implements StudentServiceI {
       )
   }
 
-  private applyCareerJoin <T extends typeof this.selectQuery> (query: T) {
-    const db = this.db
+  private applyCareerJoin <T extends Knex.QueryBuilder> (query: T, db: Knex) {
     return query.leftJoin('Careers', 'Students.careerId', '=', 'Careers.id')
       .select(
         db.ref('id').withSchema('Careers').as('career_id'),
@@ -66,7 +73,18 @@ export class StudentService implements StudentServiceI {
   async login (email: string, password: string): Promise<string> {
     const db = this.db
     const user = await this.selectQuery
-      .select(db.ref('password').withSchema('Students'))
+      .select(
+        db.ref('password').withSchema('Students'),
+        db.ref('id').withSchema('Students'),
+        db.ref('name').withSchema('Students'),
+        db.ref('code').withSchema('Students'),
+        db.ref('careerId').withSchema('Students'),
+        db.ref('email').withSchema('Students'),
+        db.ref('telephone').withSchema('Students'),
+        db.ref('createdAt').withSchema('Students'),
+        db.ref('updatedAt').withSchema('Students'),
+        db.ref('deletedAt').withSchema('Students')
+      )
       .first()
       .where('email', email)
       .whereNull('deletedAt')
@@ -97,7 +115,7 @@ export class StudentService implements StudentServiceI {
       .limit(limit)
       .offset(offset)
 
-    let selectQuery: typeof this.selectQuery | ReturnType<typeof this.applyCareerJoin> = baseSelectQuery
+    let selectQuery = baseSelectQuery
 
     if (order) selectQuery = selectQuery.orderBy([{ column: order[0], order: order[1] }, { column: 'Students.id', order: order[1] }])
 
@@ -109,7 +127,7 @@ export class StudentService implements StudentServiceI {
         .whereRaw('search_vector @@ plainto_tsquery(?, ?)', [language, search])
     }
 
-    if (includeCareer === true) selectQuery = this.applyCareerJoin(selectQuery)
+    if (includeCareer === true) selectQuery = selectQuery.modify(this.applyCareerJoin, db)
 
     const [total, records] = await Promise.all([
       countQuery,
@@ -191,9 +209,9 @@ export class StudentService implements StudentServiceI {
   async findById (id: number, opts?: FindByIdOpts): Promise<StudentWithCareer | null> {
     const includeCareer = opts?.includeCareer ?? false
     const baseQuery = this.selectQuery
-    let selectQuery: typeof this.selectQuery | ReturnType<typeof this.applyCareerJoin> = baseQuery
+    let selectQuery = baseQuery
 
-    if (includeCareer) selectQuery = this.applyCareerJoin(selectQuery)
+    if (includeCareer) selectQuery = selectQuery.modify(this.applyCareerJoin, this.db)
 
     const result = await selectQuery.where('Students.id', '=', id).first()
 
@@ -232,11 +250,11 @@ export class StudentService implements StudentServiceI {
   }
 
   async findStudentsByVacancyId (vacancyId: number): Promise<Required<StudentWithCareer>[]> {
-    const selectQuery = this.applyCareerJoin(
-      this.selectQuery
-        .innerJoin('VacanciesToStudents', 'Students.id', '=', 'VacanciesToStudents.studentId')
-        .where('VacanciesToStudents.vacancyId', '=', vacancyId)
-    )
+    let selectQuery = this.selectQuery
+      .innerJoin('VacanciesToStudents', 'Students.id', '=', 'VacanciesToStudents.studentId')
+      .where('VacanciesToStudents.vacancyId', '=', vacancyId)
+
+    selectQuery = selectQuery.modify(this.applyCareerJoin, this.db)
 
     const records = await selectQuery
 
