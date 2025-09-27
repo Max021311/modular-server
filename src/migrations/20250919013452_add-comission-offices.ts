@@ -11,6 +11,7 @@ export async function up (knex: Knex): Promise<void> {
     table.integer('fileId').references('id').inTable('Files').notNullable()
     table.timestamp('createdAt').notNullable()
     table.timestamp('updatedAt').notNullable()
+    table.unique(['studentId', 'vacancyId', 'cycleId'])
   })
 }
 
