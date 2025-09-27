@@ -36,7 +36,10 @@ export function getServices (params: GetServicesParams): Services {
     }
   })
   context.services.userService = lazyLoad((p) => new UserService(p), {
-    context
+    context,
+    config: {
+      textSearch: configuration.textSearch
+    }
   })
   context.services.emailService = lazyLoad((p) => new EmailService(p), {
     context,
@@ -59,7 +62,10 @@ export function getServices (params: GetServicesParams): Services {
     context
   })
   context.services.careerService = lazyLoad((p) => new CareerService(p), {
-    context
+    context,
+    config: {
+      textSearch: configuration.textSearch
+    }
   })
   context.services.departmentService = lazyLoad((p) => new DepartmentService(p), {
     context,
