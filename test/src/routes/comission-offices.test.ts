@@ -60,6 +60,8 @@ describe('ComissionOffices API', () => {
       
       const student = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy2 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy3 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
         comissionOfficeFactory.create({ 
@@ -70,13 +72,13 @@ describe('ComissionOffices API', () => {
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy2.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy3.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         })
@@ -135,6 +137,8 @@ describe('ComissionOffices API', () => {
       
       const student = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle1.id, departmentId: department.id })
+      const vacancy2 = await vacancyFactory.create({ cycleId: cycle1.id, departmentId: department.id })
+      const vacancy3 = await vacancyFactory.create({ cycleId: cycle1.id, departmentId: department.id })
 
       await Promise.all([
         comissionOfficeFactory.create({ 
@@ -145,13 +149,13 @@ describe('ComissionOffices API', () => {
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy2.id, 
           cycleId: cycle1.id, 
           fileId: file.id 
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy3.id, 
           cycleId: cycle2.id, 
           fileId: file.id 
         })
@@ -205,6 +209,7 @@ describe('ComissionOffices API', () => {
       const student1 = await studentFactory.create({ careerId: career.id })
       const student2 = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy2 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
         comissionOfficeFactory.create({ 
@@ -215,7 +220,7 @@ describe('ComissionOffices API', () => {
         }),
         comissionOfficeFactory.create({ 
           studentId: student1.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy2.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
@@ -273,25 +278,19 @@ describe('ComissionOffices API', () => {
       const file = await fileFactory.create()
       
       const student = await studentFactory.create({ careerId: career.id })
-      const vacancy1 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
-      const vacancy2 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const student2 = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy1.id, 
+          vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         comissionOfficeFactory.create({ 
-          studentId: student.id, 
-          vacancyId: vacancy1.id, 
-          cycleId: cycle.id, 
-          fileId: file.id 
-        }),
-        comissionOfficeFactory.create({ 
-          studentId: student.id, 
-          vacancyId: vacancy2.id, 
+          studentId: student2.id, 
+          vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         })
@@ -304,7 +303,7 @@ describe('ComissionOffices API', () => {
           authorization: `Bearer ${token}`
         },
         query: {
-          vacancyId: vacancy1.id.toString()
+          vacancyId: vacancy.id.toString()
         }
       })
       
@@ -315,7 +314,7 @@ describe('ComissionOffices API', () => {
 
       // All records should have the same vacancyId
       body.records.forEach((record: any) => {
-        expect(record.vacancyId).toBe(vacancy1.id)
+        expect(record.vacancyId).toBe(vacancy.id)
       })
     })
 
@@ -344,6 +343,8 @@ describe('ComissionOffices API', () => {
       
       const student = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy2 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy3 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
         comissionOfficeFactory.create({ 
@@ -355,14 +356,14 @@ describe('ComissionOffices API', () => {
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy2.id, 
           cycleId: cycle.id, 
           fileId: file.id,
           status: 'APPROVED'
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy3.id, 
           cycleId: cycle.id, 
           fileId: file.id,
           status: 'PENDING'
@@ -492,6 +493,10 @@ describe('ComissionOffices API', () => {
       
       const student = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy2 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy3 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy4 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy5 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
         comissionOfficeFactory.create({ 
@@ -502,25 +507,25 @@ describe('ComissionOffices API', () => {
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy2.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy3.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy4.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy5.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         })
@@ -568,6 +573,10 @@ describe('ComissionOffices API', () => {
       
       const student = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy2 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy3 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy4 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy5 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
         comissionOfficeFactory.create({ 
@@ -578,25 +587,25 @@ describe('ComissionOffices API', () => {
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy2.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy3.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy4.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy5.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         })
@@ -645,6 +654,8 @@ describe('ComissionOffices API', () => {
       
       const student = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy2 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+      const vacancy3 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
         comissionOfficeFactory.create({ 
@@ -655,13 +666,13 @@ describe('ComissionOffices API', () => {
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy2.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         comissionOfficeFactory.create({ 
           studentId: student.id, 
-          vacancyId: vacancy.id, 
+          vacancyId: vacancy3.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         })

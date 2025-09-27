@@ -53,7 +53,15 @@ describe('FinalReports API', () => {
       })
 
       // Create test data
-      const cycle = await cycleFactory.create()
+      const cycle = await cycleFactory.create({
+        slug: '2024A'
+      })
+      const cycle2 = await cycleFactory.create({
+        slug: '2024B'
+      })
+      const cycle3 = await cycleFactory.create({
+        slug: '2025A'
+      })
       const department = await departmentFactory.create()
       const career = await careerFactory.create()
       const file = await fileFactory.create()
@@ -71,13 +79,13 @@ describe('FinalReports API', () => {
         finalReportFactory.create({ 
           studentId: student.id, 
           vacancyId: vacancy.id, 
-          cycleId: cycle.id, 
+          cycleId: cycle2.id, 
           fileId: file.id 
         }),
         finalReportFactory.create({ 
           studentId: student.id, 
           vacancyId: vacancy.id, 
-          cycleId: cycle.id, 
+          cycleId: cycle3.id, 
           fileId: file.id 
         })
       ])
@@ -134,6 +142,8 @@ describe('FinalReports API', () => {
       const file = await fileFactory.create()
       
       const student = await studentFactory.create({ careerId: career.id })
+      const student2 = await studentFactory.create({ careerId: career.id })
+      const student3 = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle1.id, departmentId: department.id })
 
       await Promise.all([
@@ -144,13 +154,13 @@ describe('FinalReports API', () => {
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student2.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle1.id, 
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student3.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle2.id, 
           fileId: file.id 
@@ -197,7 +207,8 @@ describe('FinalReports API', () => {
       })
 
       // Create test data
-      const cycle = await cycleFactory.create()
+      const cycle = await cycleFactory.create({ slug: '2024A' })
+      const cycle2 = await cycleFactory.create({ slug: '2024B' })
       const department = await departmentFactory.create()
       const career = await careerFactory.create()
       const file = await fileFactory.create()
@@ -216,7 +227,7 @@ describe('FinalReports API', () => {
         finalReportFactory.create({ 
           studentId: student1.id, 
           vacancyId: vacancy.id, 
-          cycleId: cycle.id, 
+          cycleId: cycle2.id, 
           fileId: file.id 
         }),
         finalReportFactory.create({ 
@@ -273,6 +284,7 @@ describe('FinalReports API', () => {
       const file = await fileFactory.create()
       
       const student = await studentFactory.create({ careerId: career.id })
+      const student2 = await studentFactory.create({ careerId: career.id })
       const vacancy1 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
       const vacancy2 = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
@@ -284,7 +296,7 @@ describe('FinalReports API', () => {
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student2.id, 
           vacancyId: vacancy1.id, 
           cycleId: cycle.id, 
           fileId: file.id 
@@ -343,6 +355,8 @@ describe('FinalReports API', () => {
       const file = await fileFactory.create()
       
       const student = await studentFactory.create({ careerId: career.id })
+      const student2 = await studentFactory.create({ careerId: career.id })
+      const student3 = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
@@ -354,14 +368,14 @@ describe('FinalReports API', () => {
           status: 'APPROVED'
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student2.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id,
           status: 'APPROVED'
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student3.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id,
@@ -491,6 +505,10 @@ describe('FinalReports API', () => {
       const file = await fileFactory.create()
       
       const student = await studentFactory.create({ careerId: career.id })
+      const student2 = await studentFactory.create({ careerId: career.id })
+      const student3 = await studentFactory.create({ careerId: career.id })
+      const student4 = await studentFactory.create({ careerId: career.id })
+      const student5 = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
@@ -501,25 +519,25 @@ describe('FinalReports API', () => {
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student2.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student3.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student4.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student5.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
@@ -567,6 +585,10 @@ describe('FinalReports API', () => {
       const file = await fileFactory.create()
       
       const student = await studentFactory.create({ careerId: career.id })
+      const student2 = await studentFactory.create({ careerId: career.id })
+      const student3 = await studentFactory.create({ careerId: career.id })
+      const student4 = await studentFactory.create({ careerId: career.id })
+      const student5 = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
@@ -577,25 +599,25 @@ describe('FinalReports API', () => {
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student2.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student3.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student4.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student5.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
@@ -644,6 +666,8 @@ describe('FinalReports API', () => {
       const file = await fileFactory.create()
       
       const student = await studentFactory.create({ careerId: career.id })
+      const student2 = await studentFactory.create({ careerId: career.id })
+      const student3 = await studentFactory.create({ careerId: career.id })
       const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
 
       await Promise.all([
@@ -654,13 +678,13 @@ describe('FinalReports API', () => {
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student2.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
         }),
         finalReportFactory.create({ 
-          studentId: student.id, 
+          studentId: student3.id, 
           vacancyId: vacancy.id, 
           cycleId: cycle.id, 
           fileId: file.id 
