@@ -42,7 +42,7 @@ type SignPayloads = UserTokenPayload | StudentTokenPayload | InviteStudentPayloa
 
 type DecodedToken<T> = T & Jwt & JwtPayload
 
-export type DecodedTokens = DecodedToken<UserTokenPayload> | DecodedToken<InviteStudentPayload> | DecodedToken<InviteUserPayload> | undefined
+export type DecodedTokens = DecodedToken<UserTokenPayload> | DecodedToken<StudentTokenPayload> | DecodedToken<InviteStudentPayload> | DecodedToken<InviteUserPayload> | undefined
 export interface JwtServiceI {
   sign (payload: SignPayloads, expiresIn: string = '24h'): Promise<string>
   verify (token: string): Promise<DecodedTokens>
