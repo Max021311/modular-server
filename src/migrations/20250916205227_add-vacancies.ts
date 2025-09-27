@@ -12,6 +12,7 @@ export async function up (knex: Knex): Promise<void> {
     table.boolean('disabled')
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
+    table.timestamp('deletedAt').nullable()
   })
   await knex.raw(`
     ALTER TABLE "Vacancies" 
