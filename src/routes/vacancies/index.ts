@@ -49,7 +49,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       },
       disabled: { type: 'boolean' },
       createdAt: { type: 'string', format: 'date-time' },
-      updatedAt: { type: 'string', format: 'date-time' }
+      updatedAt: { type: 'string', format: 'date-time' },
+      deletedAt: { type: 'string', format: 'date-time', nullable: true }
     },
     required: ['id', 'name', 'description', 'slots', 'cycleId', 'departmentId', 'disabled', 'createdAt', 'updatedAt']
   } as const satisfies JSONSchema
@@ -198,6 +199,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         ...record,
         createdAt: record.createdAt.toISOString(),
         updatedAt: record.updatedAt.toISOString(),
+        deletedAt: record.deletedAt === null ? null : record.deletedAt.toISOString(),
         cycle: record.cycle
           ? {
               ...record.cycle,
@@ -255,7 +257,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         const response = {
           ...createdVacancy,
           createdAt: createdVacancy.createdAt.toISOString(),
-          updatedAt: createdVacancy.updatedAt.toISOString()
+          updatedAt: createdVacancy.updatedAt.toISOString(),
+          deletedAt: createdVacancy.deletedAt === null ? null : createdVacancy.deletedAt.toISOString()
         }
 
         await reply.status(201).send(response)
@@ -316,6 +319,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         ...vacancy,
         createdAt: vacancy.createdAt.toISOString(),
         updatedAt: vacancy.updatedAt.toISOString(),
+        deletedAt: vacancy.deletedAt === null ? null : vacancy.deletedAt.toISOString(),
         cycle: vacancy.cycle
           ? {
               ...vacancy.cycle,
@@ -380,7 +384,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       const response = {
         ...updatedVacancy,
         createdAt: updatedVacancy.createdAt.toISOString(),
-        updatedAt: updatedVacancy.updatedAt.toISOString()
+        updatedAt: updatedVacancy.updatedAt.toISOString(),
+        deletedAt: updatedVacancy.deletedAt === null ? null : updatedVacancy.deletedAt.toISOString()
       }
 
       await reply.status(200).send(response)
@@ -501,6 +506,142 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
 
       await reply.status(201).send({
         message: 'Student successfully associated with vacancy'
+      })
+    }
+  })
+
+  server.route({
+    method: 'PATCH',
+    url: '/:id/deactivate',
+    schema: {
+      description: `Endpoint to deactivate a vacancy (soft delete). This endpoint require the user permission \`${PERMISSIONS.EDIT_VACANCY}\``,
+      tags: ['Vacancies'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', description: 'Vacancy ID' }
+        },
+        required: ['id']
+      } as const satisfies JSONSchema,
+      response: {
+        200: vacancyResponseSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema,
+        409: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_VACANCY]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const { id } = request.params
+
+      const vacancyWithDeletedAt = await services.vacancyService().findById(id)
+
+      if (!vacancyWithDeletedAt) {
+        await reply.status(404).send({
+          message: 'Vacancy not found'
+        })
+        return
+      }
+
+      if (vacancyWithDeletedAt.deletedAt) {
+        await reply.status(409).send({
+          message: 'Vacancy is already deactivated'
+        })
+        return
+      }
+
+      const updatedVacancy = await services.vacancyService().deactivate(id)
+
+      await reply.status(200).send({
+        ...updatedVacancy,
+        createdAt: updatedVacancy.createdAt.toISOString(),
+        updatedAt: updatedVacancy.updatedAt.toISOString(),
+        deletedAt: updatedVacancy.deletedAt === null ? null : updatedVacancy.deletedAt.toISOString()
+      })
+    }
+  })
+
+  server.route({
+    method: 'PATCH',
+    url: '/:id/activate',
+    schema: {
+      description: `Endpoint to activate a vacancy (restore from soft delete). This endpoint require the user permission \`${PERMISSIONS.EDIT_VACANCY}\``,
+      tags: ['Vacancies'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', description: 'Vacancy ID' }
+        },
+        required: ['id']
+      } as const satisfies JSONSchema,
+      response: {
+        200: vacancyResponseSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema,
+        409: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_VACANCY]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const { id } = request.params
+
+      const vacancyWithDeletedAt = await services.vacancyService().findById(id)
+
+      if (!vacancyWithDeletedAt) {
+        await reply.status(404).send({
+          message: 'Vacancy not found'
+        })
+        return
+      }
+
+      if (!vacancyWithDeletedAt.deletedAt) {
+        await reply.status(409).send({
+          message: 'Vacancy is already active'
+        })
+        return
+      }
+
+      const updatedVacancy = await services.vacancyService().activate(id)
+
+      await reply.status(200).send({
+        ...updatedVacancy,
+        createdAt: updatedVacancy.createdAt.toISOString(),
+        updatedAt: updatedVacancy.updatedAt.toISOString(),
+        deletedAt: updatedVacancy.deletedAt === null ? null : updatedVacancy.deletedAt.toISOString()
       })
     }
   })
