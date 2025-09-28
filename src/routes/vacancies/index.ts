@@ -372,14 +372,16 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       const { id } = request.params
       const vacancy = request.body
 
-      const updatedVacancy = await services.vacancyService().update(id, vacancy)
+      const existVacancy = await services.vacancyService().findById(id)
 
-      if (!updatedVacancy) {
+      if (!existVacancy) {
         await reply.status(404).send({
           message: 'Vacancy not found'
         })
         return
       }
+
+      const updatedVacancy = await services.vacancyService().update(id, vacancy)
 
       const response = {
         ...updatedVacancy,
@@ -551,23 +553,17 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       const services = request.server.services
       const { id } = request.params
 
-      const vacancyWithDeletedAt = await services.vacancyService().findById(id)
+      const vacancy = await services.vacancyService().findById(id)
 
-      if (!vacancyWithDeletedAt) {
-        await reply.status(404).send({
-          message: 'Vacancy not found'
-        })
-        return
+      if (!vacancy) {
+        throw new HttpError('Vacancy not found', 404)
       }
 
-      if (vacancyWithDeletedAt.deletedAt) {
-        await reply.status(409).send({
-          message: 'Vacancy is already deactivated'
-        })
-        return
+      if (vacancy.disabled) {
+        throw new HttpError('Vacancy is already deactivated', 409)
       }
 
-      const updatedVacancy = await services.vacancyService().deactivate(id)
+      const updatedVacancy = await services.vacancyService().update(id, { disabled: true })
 
       await reply.status(200).send({
         ...updatedVacancy,
@@ -619,23 +615,17 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       const services = request.server.services
       const { id } = request.params
 
-      const vacancyWithDeletedAt = await services.vacancyService().findById(id)
+      const vacancy = await services.vacancyService().findById(id)
 
-      if (!vacancyWithDeletedAt) {
-        await reply.status(404).send({
-          message: 'Vacancy not found'
-        })
-        return
+      if (!vacancy) {
+        throw new HttpError('Vacancy not found', 404)
       }
 
-      if (!vacancyWithDeletedAt.deletedAt) {
-        await reply.status(409).send({
-          message: 'Vacancy is already active'
-        })
-        return
+      if (!vacancy.disabled) {
+        throw new HttpError('Vacancy is already active', 409)
       }
 
-      const updatedVacancy = await services.vacancyService().activate(id)
+      const updatedVacancy = await services.vacancyService().update(id, { disabled: false })
 
       await reply.status(200).send({
         ...updatedVacancy,
