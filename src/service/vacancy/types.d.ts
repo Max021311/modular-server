@@ -44,9 +44,7 @@ export interface VacancyServiceI {
   findAndCount(params: FindAndCountParams): Promise<{ total: number, records: VacancyWithJoins[] }>
   findById(id: number, opts?: FindByIdOpts): Promise<VacancyWithJoins | null>
   create(vacancy: Omit<CreateVacancy, 'createdAt'|'updatedAt'>): Promise<VacancyPicked>
-  update(id: number, vacancy: UpdateVacancy): Promise<VacancyPicked | null>
+  update(id: number, vacancy: UpdateVacancy): Promise<VacancyPicked>
   validateAssociation(vacancyId: number, studentId: number, vacancyCycleId: number): Promise<VacancyAssociationValidationResult>
   createAssociation(vacancyId: number, studentId: number): Promise<void>
-  activate(id: number): Promise<VacancyPicked>
-  deactivate(id: number): Promise<VacancyPicked>
 }

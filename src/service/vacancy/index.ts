@@ -271,10 +271,6 @@ export class VacancyService implements VacancyServiceI {
       })
       .returning('*')
 
-    if (!result) {
-      return null
-    }
-
     const updatedVacancy = {
       id: result.id,
       name: result.name,
@@ -368,57 +364,4 @@ export class VacancyService implements VacancyServiceI {
       })
   }
 
-  async activate (id: number) {
-    const db = this.db
-
-    const [result] = await db.table('Vacancies')
-      .where({ id })
-      .update({
-        deletedAt: null,
-        updatedAt: new Date()
-      })
-      .returning('*')
-
-    const activatedVacancy = {
-      id: result.id,
-      name: result.name,
-      description: result.description,
-      slots: result.slots,
-      cycleId: result.cycleId,
-      departmentId: result.departmentId,
-      disabled: result.disabled,
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-      deletedAt: result.deletedAt
-    }
-
-    return activatedVacancy
-  }
-
-  async deactivate (id: number) {
-    const db = this.db
-
-    const [result] = await db.table('Vacancies')
-      .where({ id })
-      .update({
-        deletedAt: new Date(),
-        updatedAt: new Date()
-      })
-      .returning('*')
-
-    const deactivatedVacancy = {
-      id: result.id,
-      name: result.name,
-      description: result.description,
-      slots: result.slots,
-      cycleId: result.cycleId,
-      departmentId: result.departmentId,
-      disabled: result.disabled,
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-      deletedAt: result.deletedAt
-    }
-
-    return deactivatedVacancy
-  }
 }
