@@ -11,6 +11,7 @@ import { vacancyToStudentFactory } from '#test/utils/factories/vacancy-to-studen
 import { faker } from '@faker-js/faker'
 import configuration from '#src/common/configuration.js'
 import { JwtService } from '#src/service/jwt/index.js'
+import { PERMISSIONS } from '#src/common/permissions.js'
 
 describe('Vacancies API', () => {
   const app = build()
@@ -1546,7 +1547,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -1590,7 +1591,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -1624,7 +1625,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -1665,7 +1666,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -1707,7 +1708,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -2011,7 +2012,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -2066,7 +2067,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -2250,7 +2251,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -2291,7 +2292,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -2387,7 +2388,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -2542,7 +2543,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -2578,7 +2579,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -2663,7 +2664,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -2950,7 +2951,7 @@ describe('Vacancies API', () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
         password,
-        permissions: ['EDIT_VACANCY']
+        permissions: [PERMISSIONS.EDIT_VACANCY]
       })
       
       const token = await jwtService.sign({
@@ -3041,6 +3042,234 @@ describe('Vacancies API', () => {
       expect(res2.statusCode).toBe(201)
       const body = res2.json()
       expect(body).toHaveProperty('message', 'Student successfully associated with vacancy')
+    })
+  })
+
+  describe('PATCH /vacancies/:id/deactivate', () => {
+    const METHOD = 'PATCH'
+
+    it('Successfully deactivates a vacancy', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: [PERMISSIONS.EDIT_VACANCY]
+      })
+
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        disabled: false
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/deactivate`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body).toHaveProperty('disabled', true)
+      expect(body).toHaveProperty('id', vacancy.id)
+    })
+
+    it('Returns 404 when vacancy does not exist', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: [PERMISSIONS.EDIT_VACANCY]
+      })
+
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/99999/deactivate`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+
+      expect(res.statusCode).toBe(404)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Vacancy not found')
+    })
+
+    it('Returns 409 when vacancy is already deactivated', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: [PERMISSIONS.EDIT_VACANCY]
+      })
+
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        disabled: true
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/deactivate`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+
+      expect(res.statusCode).toBe(409)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Vacancy is already deactivated')
+    })
+  })
+
+  describe('PATCH /vacancies/:id/activate', () => {
+    const METHOD = 'PATCH'
+
+    it('Successfully activates a vacancy', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: [PERMISSIONS.EDIT_VACANCY]
+      })
+
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        disabled: true
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/activate`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body).toHaveProperty('disabled', false)
+      expect(body).toHaveProperty('id', vacancy.id)
+    })
+
+    it('Returns 404 when vacancy does not exist', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: [PERMISSIONS.EDIT_VACANCY]
+      })
+
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/99999/activate`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+
+      expect(res.statusCode).toBe(404)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Vacancy not found')
+    })
+
+    it('Returns 409 when vacancy is already active', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        permissions: [PERMISSIONS.EDIT_VACANCY]
+      })
+
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const vacancy = await vacancyFactory.create({
+        cycleId: cycle.id,
+        departmentId: department.id,
+        disabled: false
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}/activate`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+
+      expect(res.statusCode).toBe(409)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Vacancy is already active')
     })
   })
 })
