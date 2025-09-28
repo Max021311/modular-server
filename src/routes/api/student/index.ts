@@ -1,6 +1,8 @@
 import { FastifyPluginAsync } from 'fastify'
 import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts'
 import { JSONSchema } from 'json-schema-to-ts'
+import cyclesApiPlugin from './cycles/index.js'
+import vacanciesApiPlugin from './vacancies/index.js'
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -42,5 +44,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       await reply.status(200).send({ token })
     }
   })
+
+  fastify.register(cyclesApiPlugin, { prefix: '/cycles' })
+  fastify.register(vacanciesApiPlugin, { prefix: '/vacancies' })
 }
 export default routesPlugin
