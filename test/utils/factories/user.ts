@@ -1,9 +1,9 @@
 import { Factory } from 'fishery'
-import { User, CreateUser } from '#src/types/user'
+import { User, CreateUser } from '#src/types/user.js'
 import { faker } from '@faker-js/faker'
-import connectionManager from '#src/common/bd'
+import connectionManager from '#src/common/bd/index.js'
 import bcrypt from 'bcrypt'
-import { Roles } from '#src/common/permissions'
+import { Roles } from '#src/common/permissions.js'
 
 class UserFactory extends Factory<CreateUser, null, User> {
 }
