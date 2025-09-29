@@ -9,7 +9,9 @@ import { HttpError } from '#src/common/error.js'
 import { orderQueryToOrder } from '#src/common/order-query.js'
 import jwt from 'jsonwebtoken'
 import { UpdateUser } from '#src/types/user.js'
+import { fastifyErrorSchema } from '#src/common/schemas.js'
 const { TokenExpiredError, JsonWebTokenError, NotBeforeError } = jwt
+import { URL } from 'node:url'
 
 export default fp(async function RoutesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -330,9 +332,11 @@ export default fp(async function RoutesPlugin (fastify) {
         scope: TOKEN_SCOPES.INVITE_USER
       }
       const token = await services.jwtService().sign(payload)
+      const completionUrl = new URL('/registro-administrativo', config.webUrl)
+      completionUrl.searchParams.append('token', token)
       await services.emailService().sendInviteStudentEmail({
         email: payload.user,
-        completionUrl: `${config.webUrl}/registro-alumno?${token}`
+        completionUrl: completionUrl.toString()
       })
       await reply.status(200).send(null)
     }
@@ -340,7 +344,7 @@ export default fp(async function RoutesPlugin (fastify) {
 
   server.route({
     method: 'POST',
-    url: '/user/add',
+    url: '/users/add',
     schema: {
       tags: ['Users'],
       headers: {
@@ -357,7 +361,9 @@ export default fp(async function RoutesPlugin (fastify) {
           properties: {
             id: { type: 'integer' }
           }
-        } as const satisfies JSONSchema
+        } as const satisfies JSONSchema,
+        401: fastifyErrorSchema,
+        400: fastifyErrorSchema
       }
     },
     async handler (request, reply) {
