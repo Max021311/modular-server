@@ -4,6 +4,9 @@ import { FastifyPluginAsync } from 'fastify'
 import { orderQueryToOrder } from '#src/common/order-query.js'
 import buildVerifyUserToken from '#src/prehandlers/verify-user-token.js'
 import { PERMISSIONS } from '#src/common/permissions.js'
+import { fastifyErrorSchema } from '#src/common/schemas.js'
+import { HttpError } from '#src/common/error.js'
+import axios from 'axios'
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -279,7 +282,63 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       })
     }
   })
+
+  server.route({
+    method: 'GET',
+    url: '/:id/download',
+    schema: {
+      description: `Download a final report file. This endpoint requires the user permission \`${PERMISSIONS.VIEW_REPORT}\``,
+      tags: ['FinalReports'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', description: 'FinalReport ID' }
+        },
+        required: ['id']
+      } as const satisfies JSONSchema,
+      response: {
+        200: {
+          type: 'string',
+          format: 'binary'
+        } as const satisfies JSONSchema,
+        404: fastifyErrorSchema,
+        500: fastifyErrorSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_REPORT]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const { id } = request.params
+
+      const finalReport = await services.finalReportService().getById(id)
+
+      if (finalReport === null) {
+        throw new HttpError('Final report not found', 404)
+      }
+
+      const file = await services.fileService().getById(finalReport.fileId)
+
+      if (file === null) {
+        throw new HttpError('File not found', 404)
+      }
+
+      const response = await axios.get(file.url, {
+        responseType: 'stream'
+      })
+
+      reply.header('Content-Disposition', `attachment; filename="${file.name}"`)
+      reply.header('Content-Type', 'application/octet-stream')
+
+      await reply.send(response.data)
+    }
+  })
 }
 
 export default routesPlugin
-

@@ -4,6 +4,9 @@ import { FastifyPluginAsync } from 'fastify'
 import { orderQueryToOrder } from '#src/common/order-query.js'
 import buildVerifyUserToken from '#src/prehandlers/verify-user-token.js'
 import { PERMISSIONS } from '#src/common/permissions.js'
+import { fastifyErrorSchema } from '#src/common/schemas.js'
+import { HttpError } from '#src/common/error.js'
+import axios from 'axios'
 
 const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   const server = fastify.withTypeProvider<JsonSchemaToTsProvider>()
@@ -279,6 +282,63 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         createdAt: updatedRecord.createdAt.toISOString(),
         updatedAt: updatedRecord.updatedAt.toISOString()
       })
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    url: '/:id/download',
+    schema: {
+      description: `Download a comission office file. This endpoint requires the user permission \`${PERMISSIONS.VIEW_COMISSION_OFFICE}\``,
+      tags: ['ComissionOffices'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', description: 'ComissionOffice ID' }
+        },
+        required: ['id']
+      } as const satisfies JSONSchema,
+      response: {
+        200: {
+          type: 'string',
+          format: 'binary'
+        } as const satisfies JSONSchema,
+        404: fastifyErrorSchema,
+        500: fastifyErrorSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_COMISSION_OFFICE]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const { id } = request.params
+
+      const comissionOffice = await services.comissionOfficeService().getById(id)
+
+      if (comissionOffice === null) {
+        throw new HttpError('Comission office not found', 404)
+      }
+
+      const file = await services.fileService().getById(comissionOffice.fileId)
+
+      if (file === null) {
+        throw new HttpError('File not found', 404)
+      }
+
+      const response = await axios.get(file.url, {
+        responseType: 'stream'
+      })
+
+      reply.header('Content-Disposition', `attachment; filename="${file.name}"`)
+      reply.header('Content-Type', 'application/octet-stream')
+
+      await reply.send(response.data)
     }
   })
 }
