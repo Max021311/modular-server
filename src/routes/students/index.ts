@@ -10,6 +10,7 @@ import { orderQueryToOrder } from '#src/common/order-query.js'
 import buildVerifyUserToken from '#src/prehandlers/verify-user-token.js'
 import { PERMISSIONS } from '#src/common/permissions.js'
 import pg from 'pg'
+import { URL } from 'node:url'
 
 const { DatabaseError } = pg
 const { TokenExpiredError, JsonWebTokenError, NotBeforeError } = jwt
@@ -155,9 +156,11 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         email,
         scope: TOKEN_SCOPES.INVITE_STUDENT
       })
+      const completionUrl = new URL('/registro-alumno', config.webUrl)
+      completionUrl.searchParams.append('token', token)
       await services.emailService().sendInviteStudentEmail({
         email,
-        completionUrl: `${config.webUrl}/registro-alumno?token=${token}`
+        completionUrl: completionUrl.toString()
       })
       await reply.status(204).send(null)
     }
