@@ -26,8 +26,14 @@ export interface FindAndCountParams {
   includeVacancy?: boolean
 }
 
+export interface GetByIdParams {
+  includeCycle?: boolean
+  includeStudent?: boolean
+  includeVacancy?: boolean
+}
+
 export interface ComissionOfficeServiceI {
-  getById(id: number): Promise<ComissionOfficePicked | null>
+  getById(id: number, params?: GetByIdParams): Promise<ComissionOfficeWithJoins | null>
   findAndCount(params: FindAndCountParams): Promise<{ total: number, records: ComissionOfficeWithJoins[] }>
   create(comissionOfficeData: Omit<CreateComissionOffice, 'createdAt' | 'updatedAt'>): Promise<ComissionOfficePicked>
   update(id: number, comissionOfficeData: Omit<UpdateComissionOffice, 'updatedAt'>): Promise<ComissionOfficePicked>
