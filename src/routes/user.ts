@@ -8,6 +8,7 @@ import config from '#src/common/configuration.js'
 import { HttpError } from '#src/common/error.js'
 import { orderQueryToOrder } from '#src/common/order-query.js'
 import jwt from 'jsonwebtoken'
+import { UpdateUser } from '#src/types/user.js'
 const { TokenExpiredError, JsonWebTokenError, NotBeforeError } = jwt
 
 export default fp(async function RoutesPlugin (fastify) {
@@ -118,6 +119,29 @@ export default fp(async function RoutesPlugin (fastify) {
       id: { type: 'string', pattern: '^[0-9]+$' }
     },
     required: ['id']
+  } as const satisfies JSONSchema
+
+  const updateUserBodySchema = {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      user: {
+        type: 'string',
+        format: 'email'
+      },
+      role: {
+        type: 'string',
+        enum: ['admin', 'member', 'base']
+      },
+      permissions: {
+        type: 'array',
+        items: {
+          type: 'string',
+          enum: Object.values(PERMISSIONS)
+        }
+      }
+    },
+    additionalProperties: false
   } as const satisfies JSONSchema
 
   server.route({
@@ -308,7 +332,7 @@ export default fp(async function RoutesPlugin (fastify) {
       const token = await services.jwtService().sign(payload)
       await services.emailService().sendInviteStudentEmail({
         email: payload.user,
-        completionUrl: `${config.webUrl}/invite-user?${token}`
+        completionUrl: `${config.webUrl}/registro-alumno?${token}`
       })
       await reply.status(200).send(null)
     }
@@ -467,6 +491,77 @@ export default fp(async function RoutesPlugin (fastify) {
         ...user,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString()
+      }
+
+      await reply.status(200).send(userResponse)
+    }
+  })
+
+  server.route({
+    method: 'PATCH',
+    url: '/users/:id',
+    schema: {
+      description: `Update user by ID. Only allows modifying name, user (email), role and permissions. This endpoint requires the user permission \`${PERMISSIONS.EDIT_USER}\``,
+      tags: ['Users'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: userParamsSchema,
+      body: updateUserBodySchema,
+      response: {
+        200: userResponseSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_USER]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const userId = parseInt(request.params.id)
+
+      const existingUser = await services.userService().getById(userId)
+      if (!existingUser) {
+        throw new HttpError('User not found', 404)
+      }
+
+      const updateData: Omit<UpdateUser, 'updatedAt'|'password'> = {}
+      if (request.body.name !== undefined) {
+        updateData.name = request.body.name
+      }
+      if (request.body.user !== undefined) {
+        updateData.user = request.body.user
+      }
+      if (request.body.role !== undefined) {
+        updateData.role = request.body.role
+      }
+      if (request.body.permissions !== undefined) {
+        updateData.permissions = request.body.permissions
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        const userResponse = {
+          ...existingUser,
+          createdAt: existingUser.createdAt.toISOString(),
+          updatedAt: existingUser.updatedAt.toISOString()
+        }
+        await reply.status(200).send(userResponse)
+        return
+      }
+
+      const updatedUser = await services.userService().update(userId, updateData)
+
+      const userResponse = {
+        ...updatedUser,
+        createdAt: updatedUser.createdAt.toISOString(),
+        updatedAt: updatedUser.updatedAt.toISOString()
       }
 
       await reply.status(200).send(userResponse)
