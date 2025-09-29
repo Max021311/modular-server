@@ -385,17 +385,25 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       response: {
         204: {
           type: 'null'
-        } as const satisfies JSONSchema
+        } as const satisfies JSONSchema,
+        409: fastifyErrorSchema
       }
     },
     preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_STUDENT]),
     async handler (request, reply) {
-      const services = request.server.services
-      const { id } = request.params
-      const updateData = { ...request.body }
+      try {
+        const services = request.server.services
+        const { id } = request.params
+        const updateData = { ...request.body }
 
-      await services.studentService().updateStudent(id, updateData)
-      await reply.status(204).send(null)
+        await services.studentService().updateStudent(id, updateData)
+        await reply.status(204).send(null)
+      } catch (error) {
+        if (error instanceof DatabaseError && error.code === '23505') {
+          throw new HttpError('Conflict: email, telephone or code already in use', 409)
+        }
+        throw error
+      }
     }
   })
 

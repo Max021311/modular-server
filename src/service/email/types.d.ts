@@ -15,6 +15,16 @@ export interface SendInviteUserEmailParams {
   completionUrl: string
 }
 
+export interface SendRecoverStudentPassword {
+  email: string
+  url: string
+}
+
+export interface SendRecoverUserPassword {
+  email: string
+  url: string
+}
+
 export interface EmailServiceConfig {
   user: string
   password: string,
@@ -25,4 +35,6 @@ export interface EmailServiceI {
   sendEmail(params): Promise<void>
   sendInviteStudentEmail(params: SendInviteStudentEmailParams): Promise<void>
   sendInviteUserEmail(params: SendInviteUserEmailParams): Promise<void>
+  sendRecoverStudentPassword(params: SendRecoverStudentPassword): Promise<void>
+  sendRecoverUserPassword(params: SendRecoverUserPassword): Promise<void>
 }

@@ -38,11 +38,32 @@ export interface InviteStudentPayload {
   scope: typeof TOKEN_SCOPES.INVITE_STUDENT
 }
 
-type SignPayloads = UserTokenPayload | StudentTokenPayload | InviteStudentPayload | InviteUserPayload
+export interface RecoverStudentPassword {
+  id: number
+  scope: typeof TOKEN_SCOPES.RECOVER_STUDENT_PASSWORD
+}
+
+export interface RecoverUserPassword {
+  id: number
+  scope: typeof TOKEN_SCOPES.RECOVER_USER_PASSWORD
+}
+
+type SignPayloads = UserTokenPayload
+| StudentTokenPayload
+| InviteStudentPayload
+| InviteUserPayload
+| RecoverStudentPassword
+| RecoverUserPassword
 
 type DecodedToken<T> = T & Jwt & JwtPayload
 
-export type DecodedTokens = DecodedToken<UserTokenPayload> | DecodedToken<StudentTokenPayload> | DecodedToken<InviteStudentPayload> | DecodedToken<InviteUserPayload> | undefined
+export type DecodedTokens = DecodedToken<UserTokenPayload>
+| DecodedToken<StudentTokenPayload>
+| DecodedToken<InviteStudentPayload>
+| DecodedToken<InviteUserPayload>
+| DecodedToken<RecoverStudentPassword>
+| DecodedToken<RecoverUserPassword>
+| undefined
 export interface JwtServiceI {
   sign (payload: SignPayloads, expiresIn: string = '24h'): Promise<string>
   verify (token: string): Promise<DecodedTokens>

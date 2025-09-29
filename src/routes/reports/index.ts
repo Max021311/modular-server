@@ -100,7 +100,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'GET',
     url: '/',
     schema: {
-      description: `Endpoint to get reports with pagination and filters. This endpoint require the user permission \`${PERMISSIONS.VIEW_STUDENT}\``,
+      description: `Endpoint to get reports with pagination and filters. This endpoint require the user permission \`${PERMISSIONS.VIEW_REPORT}\``,
       tags: ['Reports'],
       headers: {
         type: 'object',
@@ -123,7 +123,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         } as const satisfies JSONSchema
       }
     },
-    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_STUDENT]),
+    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_REPORT]),
     async handler (request, reply) {
       const services = request.server.services
       const {
@@ -217,7 +217,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     method: 'PATCH',
     url: '/:id',
     schema: {
-      description: `Endpoint to update the status of a report. Only allows changing from PENDING to APPROVED or REJECTED. This endpoint requires the user permission \`${PERMISSIONS.EDIT_STUDENT}\``,
+      description: `Endpoint to update the status of a report. Only allows changing from PENDING to APPROVED or REJECTED. This endpoint requires the user permission \`${PERMISSIONS.EDIT_REPORT}\``,
       tags: ['Reports'],
       headers: {
         type: 'object',
@@ -250,7 +250,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         } as const satisfies JSONSchema
       }
     },
-    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_STUDENT]),
+    preHandler: buildVerifyUserToken([PERMISSIONS.EDIT_REPORT]),
     async handler (request, reply) {
       const services = request.server.services
       const { id } = request.params

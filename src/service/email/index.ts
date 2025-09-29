@@ -4,7 +4,9 @@ import type {
   SendInviteStudentEmailParams,
   SendInviteUserEmailParams,
   EmailServiceConfig,
-  SendEmailParams
+  SendEmailParams,
+  SendRecoverStudentPassword,
+  SendRecoverUserPassword
 } from './types.js'
 import type { ModuleConstructorParams } from '#src/service/types.js'
 
@@ -121,6 +123,82 @@ export class EmailService implements EmailServiceI {
         subject,
         text
       }, 'Send invite email')
+      return Promise.resolve()
+    }
+    await this.sendEmail({
+      to: params.email,
+      subject,
+      text,
+      html
+    })
+  }
+
+  async sendRecoverStudentPassword (params: SendRecoverStudentPassword): Promise<void> {
+    const text = this.templateRender().render({
+      template: 'recover-student-password',
+      file: 'body.txt',
+      data: {
+        url: params.url
+      }
+    })
+    const html = this.templateRender().render({
+      template: 'recover-student-password',
+      file: 'body.html',
+      data: {
+        url: params.url
+      }
+    })
+    const subject = this.templateRender().render({
+      template: 'recover-student-password',
+      file: 'subject.txt',
+      data: {
+        url: params.url
+      }
+    })
+    if (!this.enableEmail) {
+      this.logger.info({
+        params,
+        subject,
+        text
+      }, 'Send recover student password email')
+      return Promise.resolve()
+    }
+    await this.sendEmail({
+      to: params.email,
+      subject,
+      text,
+      html
+    })
+  }
+
+  async sendRecoverUserPassword (params: SendRecoverUserPassword): Promise<void> {
+    const text = this.templateRender().render({
+      template: 'recover-user-password',
+      file: 'body.txt',
+      data: {
+        url: params.url
+      }
+    })
+    const html = this.templateRender().render({
+      template: 'recover-user-password',
+      file: 'body.html',
+      data: {
+        url: params.url
+      }
+    })
+    const subject = this.templateRender().render({
+      template: 'recover-user-password',
+      file: 'subject.txt',
+      data: {
+        url: params.url
+      }
+    })
+    if (!this.enableEmail) {
+      this.logger.info({
+        params,
+        subject,
+        text
+      }, 'Send recover student password email')
       return Promise.resolve()
     }
     await this.sendEmail({

@@ -6,7 +6,8 @@ import type {
   UserServiceI,
   CreateUser,
   FindAndCountParams,
-  UserServiceConfigI
+  UserServiceConfigI,
+  UpdateUser
 } from './types.js'
 import type { ModuleConstructorParams } from '#src/service/types.js'
 import loadPermissions from '#src/common/load-permissions.js'
@@ -140,5 +141,25 @@ export class UserService implements UserServiceI {
       records,
       total: Number(total?.count ?? 0)
     }
+  }
+
+  async update (id: number, userData: UpdateUser) {
+    const [user] = await this.db
+      .table('Users')
+      .where({ id })
+      .update({
+        ...userData,
+        updatedAt: new Date()
+      })
+      .returning([
+        'id',
+        'name',
+        'user',
+        'role',
+        'permissions',
+        'createdAt',
+        'updatedAt'
+      ])
+    return user
   }
 }

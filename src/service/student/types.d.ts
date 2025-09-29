@@ -1,7 +1,7 @@
 import type { CreateStudent, Student, UpdateStudent } from '#src/types/student.js'
 import type { Career } from '#src/types/career.js'
 
-export { CreateStudent, UpdateStudent } from '#src/types/student'
+export { CreateStudent, UpdateStudent } from '#src/types/student.js'
 
 export type StudentWithouPasswordFields = 'id'|'name'|'code'|'careerId'|'email'|'telephone'|'createdAt'|'updatedAt'|'deletedAt'
 

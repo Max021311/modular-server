@@ -1,6 +1,6 @@
-import type { CreateUser, UserWithoutPassword } from '#src/types/user.js'
+import type { CreateUser, UserWithoutPassword, UpdateUser } from '#src/types/user.js'
 
-export { CreateUser } from '#src/types/user'
+export { CreateUser, UpdateUser } from '#src/types/user.js'
 
 export interface FindAndCountParams {
   limit?: number
@@ -16,6 +16,7 @@ export interface UserServiceI {
   verifyUserToken (jwt: string): Promise<UserWithoutPassword>
   create(user: CreateUser): Promise<UserWithoutPassword>
   findAndCount(params?: FindAndCountParams): Promise<{ records: UserWithoutPassword[]; total: number }>
+  update (id: number, user: UpdateUser): Promise<UserWithoutPassword>
 }
 
 export interface UserServiceConfigI {

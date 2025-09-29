@@ -20,7 +20,26 @@ export interface InviteUser extends TemplateDefinition {
   }
 }
 
-type RenderParams = InviteStudent | InviteUser
+export interface RecoverStudentPassword extends TemplateDefinition {
+  template: 'recover-student-password'
+  file: 'body.html' | 'body.txt' | 'subject.txt'
+  data: {
+    url: string
+  }
+}
+
+export interface RecoverUserPassword extends TemplateDefinition {
+  template: 'recover-user-password'
+  file: 'body.html' | 'body.txt' | 'subject.txt'
+  data: {
+    url: string
+  }
+}
+
+type RenderParams = InviteStudent
+| InviteUser
+| RecoverStudentPassword
+| RecoverUserPassword
 
 export interface TemplateRenderI {
   render(params: RenderParams): string
