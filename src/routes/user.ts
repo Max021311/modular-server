@@ -112,6 +112,14 @@ export default fp(async function RoutesPlugin (fastify) {
     }
   } as const satisfies JSONSchema
 
+  const userParamsSchema = {
+    type: 'object',
+    properties: {
+      id: { type: 'string', pattern: '^[0-9]+$' }
+    },
+    required: ['id']
+  } as const satisfies JSONSchema
+
   server.route({
     method: 'POST',
     url: '/user/auth',
@@ -418,6 +426,50 @@ export default fp(async function RoutesPlugin (fastify) {
         total: result.total,
         records
       })
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    url: '/users/:id',
+    schema: {
+      description: 'Get user by ID',
+      tags: ['Users'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `user`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      params: userParamsSchema,
+      response: {
+        200: userResponseSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          }
+        } as const satisfies JSONSchema
+      }
+    },
+    preHandler: buildVerifyUserToken([PERMISSIONS.VIEW_USER]),
+    async handler (request, reply) {
+      const services = request.server.services
+      const userId = parseInt(request.params.id)
+
+      const user = await services.userService().getById(userId)
+      if (!user) {
+        throw new HttpError('User not found', 404)
+      }
+
+      const userResponse = {
+        ...user,
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString()
+      }
+
+      await reply.status(200).send(userResponse)
     }
   })
 })
