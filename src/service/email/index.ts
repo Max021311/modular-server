@@ -6,7 +6,10 @@ import type {
   EmailServiceConfig,
   SendEmailParams,
   SendRecoverStudentPassword,
-  SendRecoverUserPassword
+  SendRecoverUserPassword,
+  SendReportStatusChange,
+  SendFinalReportStatusChange,
+  SendComissionOfficeStatusChange
 } from './types.js'
 import type { ModuleConstructorParams } from '#src/service/types.js'
 
@@ -199,6 +202,147 @@ export class EmailService implements EmailServiceI {
         subject,
         text
       }, 'Send recover student password email')
+      return Promise.resolve()
+    }
+    await this.sendEmail({
+      to: params.email,
+      subject,
+      text,
+      html
+    })
+  }
+
+  async sendReportStatusChange (params: SendReportStatusChange): Promise<void> {
+    const text = this.templateRender().render({
+      template: 'report-status-change',
+      file: 'body.txt',
+      data: {
+        studentName: params.studentName,
+        vacancyName: params.vacancyName,
+        cycleName: params.cycleName,
+        status: params.status
+      }
+    })
+    const html = this.templateRender().render({
+      template: 'report-status-change',
+      file: 'body.html',
+      data: {
+        studentName: params.studentName,
+        vacancyName: params.vacancyName,
+        cycleName: params.cycleName,
+        status: params.status
+      }
+    })
+    const subject = this.templateRender().render({
+      template: 'report-status-change',
+      file: 'subject.txt',
+      data: {
+        studentName: params.studentName,
+        vacancyName: params.vacancyName,
+        cycleName: params.cycleName,
+        status: params.status
+      }
+    })
+    if (!this.enableEmail) {
+      this.logger.info({
+        params,
+        subject,
+        text
+      }, 'Send report status change email')
+      return Promise.resolve()
+    }
+    await this.sendEmail({
+      to: params.email,
+      subject,
+      text,
+      html
+    })
+  }
+
+  async sendFinalReportStatusChange (params: SendFinalReportStatusChange): Promise<void> {
+    const text = this.templateRender().render({
+      template: 'final-report-status-change',
+      file: 'body.txt',
+      data: {
+        studentName: params.studentName,
+        vacancyName: params.vacancyName,
+        cycleName: params.cycleName,
+        status: params.status
+      }
+    })
+    const html = this.templateRender().render({
+      template: 'final-report-status-change',
+      file: 'body.html',
+      data: {
+        studentName: params.studentName,
+        vacancyName: params.vacancyName,
+        cycleName: params.cycleName,
+        status: params.status
+      }
+    })
+    const subject = this.templateRender().render({
+      template: 'final-report-status-change',
+      file: 'subject.txt',
+      data: {
+        studentName: params.studentName,
+        vacancyName: params.vacancyName,
+        cycleName: params.cycleName,
+        status: params.status
+      }
+    })
+    if (!this.enableEmail) {
+      this.logger.info({
+        params,
+        subject,
+        text
+      }, 'Send final report status change email')
+      return Promise.resolve()
+    }
+    await this.sendEmail({
+      to: params.email,
+      subject,
+      text,
+      html
+    })
+  }
+
+  async sendComissionOfficeStatusChange (params: SendComissionOfficeStatusChange): Promise<void> {
+    const text = this.templateRender().render({
+      template: 'comission-office-status-change',
+      file: 'body.txt',
+      data: {
+        studentName: params.studentName,
+        vacancyName: params.vacancyName,
+        cycleName: params.cycleName,
+        status: params.status
+      }
+    })
+    const html = this.templateRender().render({
+      template: 'comission-office-status-change',
+      file: 'body.html',
+      data: {
+        studentName: params.studentName,
+        vacancyName: params.vacancyName,
+        cycleName: params.cycleName,
+        status: params.status
+      }
+    })
+    const subject = this.templateRender().render({
+      template: 'comission-office-status-change',
+      file: 'subject.txt',
+      data: {
+        studentName: params.studentName,
+        vacancyName: params.vacancyName,
+        cycleName: params.cycleName,
+        status: params.status
+      }
+    })
+    if (!this.enableEmail) {
+      this.logger.info({
+        params,
+        subject,
+        text
+      }, 'Send comission office status change email')
       return Promise.resolve()
     }
     await this.sendEmail({

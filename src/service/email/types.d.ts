@@ -25,6 +25,30 @@ export interface SendRecoverUserPassword {
   url: string
 }
 
+export interface SendReportStatusChange {
+  email: string
+  studentName: string
+  vacancyName: string
+  cycleName: string
+  status: 'aprobado' | 'rechazado'
+}
+
+export interface SendFinalReportStatusChange {
+  email: string
+  studentName: string
+  vacancyName: string
+  cycleName: string
+  status: 'aprobado' | 'rechazado'
+}
+
+export interface SendComissionOfficeStatusChange {
+  email: string
+  studentName: string
+  vacancyName: string
+  cycleName: string
+  status: 'aprobado' | 'rechazado'
+}
+
 export interface EmailServiceConfig {
   user: string
   password: string,
@@ -37,4 +61,7 @@ export interface EmailServiceI {
   sendInviteUserEmail(params: SendInviteUserEmailParams): Promise<void>
   sendRecoverStudentPassword(params: SendRecoverStudentPassword): Promise<void>
   sendRecoverUserPassword(params: SendRecoverUserPassword): Promise<void>
+  sendReportStatusChange(params: SendReportStatusChange): Promise<void>
+  sendFinalReportStatusChange(params: SendFinalReportStatusChange): Promise<void>
+  sendComissionOfficeStatusChange(params: SendComissionOfficeStatusChange): Promise<void>
 }
