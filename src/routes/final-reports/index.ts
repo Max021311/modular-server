@@ -255,7 +255,11 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       const { status } = request.body
 
       // First, get the current record to check its current status
-      const currentRecord = await services.finalReportService().getById(id)
+      const currentRecord = await services.finalReportService().getById(id, {
+        includeCycle: true,
+        includeStudent: true,
+        includeVacancy: true
+      })
 
       if (!currentRecord) {
         await reply.status(404).send({
@@ -274,6 +278,14 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
 
       // Update the status
       const updatedRecord = await services.finalReportService().update(id, { status })
+
+      await services.emailService().sendFinalReportStatusChange({
+        email: currentRecord.student?.email ?? '',
+        studentName: currentRecord.student?.name ?? '',
+        vacancyName: currentRecord.vacancy?.name ?? '',
+        cycleName: currentRecord.cycle?.slug ?? '',
+        status: status === 'APPROVED' ? 'aprobado' : 'rechazado'
+      })
 
       await reply.status(200).send({
         ...updatedRecord,
