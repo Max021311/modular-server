@@ -26,8 +26,14 @@ export interface FindAndCountParams {
   includeVacancy?: boolean
 }
 
+export interface GetByIdParams {
+  includeCycle?: boolean
+  includeStudent?: boolean
+  includeVacancy?: boolean
+}
+
 export interface FinalReportServiceI {
-  getById(id: number): Promise<FinalReportPicked | null>
+  getById(id: number, params?: GetByIdParams): Promise<FinalReportWithJoins | null>
   findAndCount(params: FindAndCountParams): Promise<{ total: number, records: FinalReportWithJoins[] }>
   create(finalReportData: Omit<CreateFinalReport, 'createdAt' | 'updatedAt'>): Promise<FinalReportPicked>
   update(id: number, finalReportData: Omit<UpdateFinalReport, 'updatedAt'>): Promise<FinalReportPicked>
