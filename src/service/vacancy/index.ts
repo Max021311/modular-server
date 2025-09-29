@@ -22,7 +22,7 @@ type Vacancy = Pick<Tables['Vacancies']['base'], 'id'|'name'|'description'|'slot
 type CycleJoin = PrefixedPick<Tables['Cycles']['base'], 'id'|'slug'|'isCurrent'|'createdAt'|'updatedAt', 'cycle_'>
 type DepartmentJoin = PrefixedPick<Tables['Departments']['base'], 'id'|'name'|'address'|'phone'|'email'|'chiefName'|'createdAt'|'updatedAt', 'department_'>
 
-type VacancyWithJoins = Vacancy & AtLeastOneJoin<[CycleJoin, DepartmentJoin]>
+type VacancyWithJoins = Vacancy & AtLeastOneJoin<[CycleJoin, DepartmentJoin, { used_slots: number }]>
 
 export class VacancyService implements VacancyServiceI {
   private readonly logger: ConstructorParams['context']['logger']
@@ -81,8 +81,18 @@ export class VacancyService implements VacancyServiceI {
       )
   }
 
+  private applyUsedSlotsJoin <T extends Knex.QueryBuilder> (query: T, db: Knex) {
+    return query
+      .select(
+        db('VacanciesToStudents')
+          .count('id')
+          .where(db.ref('vacancyId').withSchema('VacanciesToStudents'), '=', db.ref('id').withSchema('Vacancies'))
+          .as('used_slots')
+      )
+  }
+
   async findAndCount (params: FindAndCountParams) {
-    const { limit, offset, order, search, includeCycle, includeDepartment, departmentId, cycleId, studentId } = params
+    const { limit, offset, order, search, includeCycle, includeDepartment, includeUsedSlots, departmentId, cycleId, studentId } = params
     const db = this.db
 
     let countQuery = db.table('Vacancies')
@@ -134,6 +144,9 @@ export class VacancyService implements VacancyServiceI {
     if (includeDepartment === true) {
       selectQuery = selectQuery.modify(this.applyDepartmentJoin, db)
     }
+    if (includeUsedSlots === true) {
+      selectQuery = selectQuery.modify(this.applyUsedSlotsJoin, db)
+    }
 
     const [total, records] = await Promise.all([
       countQuery,
@@ -174,7 +187,8 @@ export class VacancyService implements VacancyServiceI {
                 createdAt: result.department_createdAt,
                 updatedAt: result.department_updatedAt
               }
-            : undefined
+            : undefined,
+          usedSlots: 'used_slots' in result ? Number(result.used_slots) : undefined
         }
         return vacancy
       })
@@ -189,6 +203,7 @@ export class VacancyService implements VacancyServiceI {
 
     if (opts?.includeCycle) query = query.modify(this.applyCycleJoin, db)
     if (opts?.includeDepartment) query = query.modify(this.applyDepartmentJoin, db)
+    if (opts?.includeUsedSlots) query = query.modify(this.applyUsedSlotsJoin, db)
 
     const result = await query
 
@@ -227,7 +242,8 @@ export class VacancyService implements VacancyServiceI {
             createdAt: result.department_createdAt,
             updatedAt: result.department_updatedAt
           }
-        : undefined
+        : undefined,
+      usedSlots: 'used_slots' in result ? Number(result.used_slots) : undefined
     }
 
     return vacancy
@@ -364,4 +380,27 @@ export class VacancyService implements VacancyServiceI {
       })
   }
 
+  async getAssociation (studentId: number, vacancyId: number) {
+    const db = this.db
+
+    const association = await db.table('VacanciesToStudents')
+      .where('VacanciesToStudents.studentId', '=', studentId)
+      .where('VacanciesToStudents.vacancyId', '=', vacancyId)
+      .select(
+        '*'
+      )
+      .first()
+
+    if (!association) {
+      return null
+    }
+
+    return {
+      id: association.id,
+      studentId: association.studentId,
+      vacancyId: association.vacancyId,
+      createdAt: association.createdAt,
+      updatedAt: association.updatedAt
+    }
+  }
 }

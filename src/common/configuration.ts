@@ -10,7 +10,8 @@ const configuration = {
     user: process.env.EMAIL_USER ?? '',
     pass: process.env.EMAIL_PASSWORD ?? '',
     enableEmail: (process.env.EMAIL_ENABLE ?? '') === 'true'
-  }
+  },
+  environment: process.env.ENVIRONMENT ?? 'development'
 } as const
 
 export default configuration

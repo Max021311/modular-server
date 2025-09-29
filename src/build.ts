@@ -4,9 +4,15 @@ import { options } from './common/logger.js'
 import cors from '@fastify/cors'
 import servicesPlugin from './plugins/services.js'
 import fastifySwagger from '@fastify/swagger'
+import fastifyMultipart from '@fastify/multipart'
 
 function build () {
   const server = fastify({
+    ajv: {
+      customOptions: {
+        coerceTypes: true
+      }
+    },
     logger: {
       ...options,
       serializers: {
@@ -48,6 +54,16 @@ function build () {
     })
     .register(cors, {
       origin: true
+    })
+    .register(fastifyMultipart, {
+      attachFieldsToBody: true,
+      limits: {
+        fieldNameSize: 100,
+        fieldSize: 1024 * 5,
+        fields: 10,
+        fileSize: 1024 * 1024 * 10,
+        files: 1
+      }
     })
     .register(servicesPlugin)
     .register(routesPlugin)

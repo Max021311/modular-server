@@ -32,4 +32,5 @@ export interface ReportServiceI {
   findAndCount(params: FindAndCountParams): Promise<{ total: number, records: ReportWithJoins[] }>
   create(reportData: Omit<CreateReport, 'createdAt' | 'updatedAt'>): Promise<ReportPicked>
   update(id: number, reportData: Omit<UpdateReport, 'updatedAt'>): Promise<ReportPicked>
+  delete(id: number): Promise<void>
 }

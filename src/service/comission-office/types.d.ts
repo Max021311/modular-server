@@ -31,4 +31,5 @@ export interface ComissionOfficeServiceI {
   findAndCount(params: FindAndCountParams): Promise<{ total: number, records: ComissionOfficeWithJoins[] }>
   create(comissionOfficeData: Omit<CreateComissionOffice, 'createdAt' | 'updatedAt'>): Promise<ComissionOfficePicked>
   update(id: number, comissionOfficeData: Omit<UpdateComissionOffice, 'updatedAt'>): Promise<ComissionOfficePicked>
+  delete(id: number): Promise<void>
 }

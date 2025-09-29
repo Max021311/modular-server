@@ -6,6 +6,7 @@ export async function seed (knex: Knex): Promise<void> {
 
   const createFile = () => ({
     name: faker.lorem.slug({ min: 2, max: 5 }),
+    url: 'https://gjxqmkajwmax4a1f.public.blob.vercel-storage.com/blank.pdf',
     createdAt: new Date(),
     updatedAt: new Date()
   })

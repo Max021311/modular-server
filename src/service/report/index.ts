@@ -259,5 +259,12 @@ export class ReportService implements ReportServiceI {
     this.logger.info(result, 'Report updated')
     return result
   }
-}
 
+  async delete (id: number) {
+    const db = this.db
+    await db.table('Reports')
+      .where({ id })
+      .del()
+    this.logger.info({ id }, 'Report deleted')
+  }
+}

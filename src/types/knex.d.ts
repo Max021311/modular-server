@@ -9,6 +9,7 @@ import type { VacancyToStudent, CreateVacancyToStudent, UpdateVacancyToStudent }
 import type { ComissionOffice, CreateComissionOffice, UpdateComissionOffice } from './comission-office.js'
 import type { FinalReport, CreateFinalReport, UpdateFinalReport } from './final-report.js'
 import type { Report, CreateReport, UpdateReport } from './report.js'
+import type { File, CreateFile, UpdateFile } from './file.js'
 
 declare module 'knex/types/tables.js' {
   interface Tables {
@@ -22,5 +23,6 @@ declare module 'knex/types/tables.js' {
     ComissionOffices: Knex.CompositeTableType<ComissionOffice, CreateComissionOffice, UpdateComissionOffice>
     FinalReports: Knex.CompositeTableType<FinalReport, CreateFinalReport, UpdateFinalReport>
     Reports: Knex.CompositeTableType<Report, CreateReport, UpdateReport>
+    Files: Knex.CompositeTableType<File, CreateFile, UpdateFile>
   }
 }

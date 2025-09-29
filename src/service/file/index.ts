@@ -3,6 +3,9 @@ import type {
   CreateFile
 } from './types.js'
 import type { ModuleConstructorParams } from '#src/service/types.js'
+import { put } from '@vercel/blob'
+import type { Buffer } from 'node:buffer'
+import ENVIRONMENTS from '#src/common/environments.js'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger'|'connectionManager',
@@ -28,8 +31,9 @@ export class FileService implements FileServiceI {
       .select(
         db.ref('id').withSchema('Files'),
         db.ref('name').withSchema('Files'),
+        db.ref('url').withSchema('Files'),
         db.ref('createdAt').withSchema('Files'),
-        db.ref('updateddAt').withSchema('Files')
+        db.ref('updatedAt').withSchema('Files')
       )
   }
 
@@ -43,27 +47,35 @@ export class FileService implements FileServiceI {
     return {
       id: result.id,
       name: result.name,
+      url: result.url,
       createdAt: result.createdAt,
-      updateddAt: result.updateddAt
+      updatedAt: result.updatedAt
     }
   }
 
-  async create (fileData: Omit<CreateFile, 'createdAt' | 'updateddAt'>) {
-    const db = this.db
-    const [result] = await db.table('Files')
-      .insert({
-        ...fileData,
-        createdAt: new Date(),
-        updateddAt: new Date()
+  genPath (id: number): string {
+    return [process.env.ENVIRONMENT ?? 'development', id].join('/')
+  }
+
+  async create (fileData: Omit<CreateFile, 'createdAt' | 'updateddAt'>, file: Buffer) {
+    return await this.db.transaction(async (db) => {
+      const [result] = await db.table('Files')
+        .insert({
+          ...fileData,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning('*')
+
+      const blob = await put(this.genPath(result.id), file, {
+        access: 'public',
+        allowOverwrite: process.env.ENVIRONMENT === ENVIRONMENTS.DEVELOPMENT
       })
-      .returning([
-        'id',
-        'name',
-        'createdAt',
-        'updateddAt'
-      ])
-    this.logger.info(result, 'File created')
-    return result
+
+      await db.table('Files').update({ url: blob.downloadUrl }).where('id', '=', result.id)
+
+      this.logger.info(result, 'File created and uploaded to Vercel Blob')
+      return result
+    })
   }
 }
-

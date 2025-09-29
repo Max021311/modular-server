@@ -250,4 +250,12 @@ export class ComissionOfficeService implements ComissionOfficeServiceI {
     this.logger.info(result, 'ComissionOffice updated')
     return result
   }
+
+  async delete (id: number) {
+    const db = this.db
+    await db.table('ComissionOffices')
+      .where({ id })
+      .del()
+    this.logger.info({ id }, 'Comission office deleted')
+  }
 }

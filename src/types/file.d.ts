@@ -1,9 +1,10 @@
-interface File {
+export interface File {
   id: number
   name: string
+  url: string
   createdAt: Date
-  updateddAt: Date
+  updatedAt: Date
 }
 
-type CreateFile = Omit<File, 'id'>
-type UpdateFile = Omit<File, 'id'|'createdAt'>
+export type CreateFile = Omit<File, 'id'>
+export type UpdateFile = Partial<Omit<File, 'id'|'createdAt'>>

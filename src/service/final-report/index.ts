@@ -250,5 +250,12 @@ export class FinalReportService implements FinalReportServiceI {
     this.logger.info(result, 'FinalReport updated')
     return result
   }
-}
 
+  async delete (id: number) {
+    const db = this.db
+    await db.table('FinalReports')
+      .where({ id })
+      .del()
+    this.logger.info({ id }, 'Final report deleted')
+  }
+}

@@ -31,5 +31,5 @@ export interface FinalReportServiceI {
   findAndCount(params: FindAndCountParams): Promise<{ total: number, records: FinalReportWithJoins[] }>
   create(finalReportData: Omit<CreateFinalReport, 'createdAt' | 'updatedAt'>): Promise<FinalReportPicked>
   update(id: number, finalReportData: Omit<UpdateFinalReport, 'updatedAt'>): Promise<FinalReportPicked>
+  delete(id: number): Promise<void>
 }
-
