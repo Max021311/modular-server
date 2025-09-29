@@ -1,0 +1,3 @@
+Oficio de comisión {{ status }}
+
+{{ studentName }} tu oficio de comisión para la plaza '{{ vacancyName }}' del ciclo {{ cycleName }} ha sido {{ status }}.

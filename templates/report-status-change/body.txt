@@ -1,0 +1,3 @@
+Reporte {{ status }}
+
+{{ studentName }} tu reporte para la plaza '{{ vacancyName }}' del ciclo {{ cycleName }} ha sido {{ status }}.
