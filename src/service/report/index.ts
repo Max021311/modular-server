@@ -2,7 +2,8 @@ import type {
   ReportServiceI,
   FindAndCountParams,
   CreateReport,
-  UpdateReport
+  UpdateReport,
+  GetByIdParams
 } from './types.js'
 import type { ModuleConstructorParams } from '#src/service/types.js'
 import type { Knex } from 'knex'
@@ -91,14 +92,28 @@ export class ReportService implements ReportServiceI {
       )
   }
 
-  async getById (id: number) {
-    const result = await this.selectQuery.where('Reports.id', '=', id).first()
+  async getById (id: number, params?: GetByIdParams) {
+    const { includeCycle, includeStudent, includeVacancy } = params || {}
+    const db = this.db
+    let selectQuery = this.selectQuery.where('Reports.id', '=', id)
+
+    if (includeCycle === true) {
+      selectQuery = selectQuery.modify(this.applyCycleJoin, db)
+    }
+    if (includeStudent === true) {
+      selectQuery = selectQuery.modify(this.applyStudentJoin, db)
+    }
+    if (includeVacancy === true) {
+      selectQuery = selectQuery.modify(this.applyVacancyJoin, db)
+    }
+
+    const result = await selectQuery.first()
 
     if (!result) {
       return null
     }
 
-    return {
+    const report = {
       id: result.id,
       studentId: result.studentId,
       vacancyId: result.vacancyId,
@@ -108,8 +123,44 @@ export class ReportService implements ReportServiceI {
       hours: result.hours,
       fileId: result.fileId,
       createdAt: result.createdAt,
-      updatedAt: result.updatedAt
+      updatedAt: result.updatedAt,
+      cycle: 'cycle_id' in result
+        ? {
+            id: result.cycle_id,
+            slug: result.cycle_slug,
+            isCurrent: result.cycle_isCurrent,
+            createdAt: result.cycle_createdAt,
+            updatedAt: result.cycle_updatedAt
+          }
+        : undefined,
+      student: 'student_id' in result
+        ? {
+            id: result.student_id,
+            name: result.student_name,
+            code: result.student_code,
+            careerId: result.student_careerId,
+            email: result.student_email,
+            telephone: result.student_telephone,
+            createdAt: result.student_createdAt,
+            updatedAt: result.student_updatedAt
+          }
+        : undefined,
+      vacancy: 'vacancy_id' in result
+        ? {
+            id: result.vacancy_id,
+            name: result.vacancy_name,
+            description: result.vacancy_description,
+            slots: result.vacancy_slots,
+            cycleId: result.vacancy_cycleId,
+            departmentId: result.vacancy_departmentId,
+            disabled: result.vacancy_disabled,
+            createdAt: result.vacancy_createdAt,
+            updatedAt: result.vacancy_updatedAt
+          }
+        : undefined
     }
+
+    return report
   }
 
   async findAndCount (params: FindAndCountParams) {
