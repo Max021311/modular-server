@@ -23,7 +23,7 @@ const verifyStudentToken: preHandlerAsyncHookHandler = async function verifyStud
   if (payload.scope !== TOKEN_SCOPES.STUDENT) { throw new HttpError('Invalid token scope', 401) }
 
   const student = await services.studentService().findById(payload.id)
-  if (student === undefined) throw new HttpError('Unauthorized', 401)
+  if (student === null) throw new HttpError('Unauthorized', 401)
 
   request.student = student
 }

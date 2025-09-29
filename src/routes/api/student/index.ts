@@ -317,6 +317,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         includeCareer
       })
 
+      // Virtually impossible the pre handler throws a 401 if the user not exists, but i need the validation to make typescript happy
       if (!student) {
         throw new HttpError('Student not found', 404)
       }
@@ -369,7 +370,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
 
       const student = await services.studentService().findById(studentId)
 
-      if (!student) {
+      if (student === null) {
         throw new HttpError('Student not found', 404)
       }
 
