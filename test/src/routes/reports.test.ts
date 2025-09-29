@@ -664,4 +664,165 @@ describe('Reports API', () => {
       expect(res.statusCode).toBe(403)
     })
   })
+
+  describe('GET /reports/:id/download', () => {
+    const METHOD = 'GET'
+
+    it('Success download report file', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      const file = await fileFactory.create({
+        name: 'test-report.pdf',
+        url: 'https://httpbin.org/base64/SFRUUEJJTiBpcyBhd2Vzb21l'
+      })
+      
+      const student = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      const report = await reportFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: file.id,
+        status: 'APPROVED'
+      })
+
+      const res = await app.inject({
+        url: `/reports/${report.id}/download`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      expect(res.headers['content-disposition']).toContain('attachment')
+      expect(res.headers['content-disposition']).toContain(file.name)
+      expect(res.headers['content-type']).toBe('application/octet-stream')
+    })
+
+    it('Returns 404 when report does not exist', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: '/reports/99999/download',
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(404)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'Report not found')
+    })
+
+    it('Returns 404 when file does not exist', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      // Create test data with non-existent file
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const career = await careerFactory.create()
+      
+      const student = await studentFactory.create({ careerId: career.id })
+      const vacancy = await vacancyFactory.create({ cycleId: cycle.id, departmentId: department.id })
+
+      const report = await reportFactory.create({ 
+        studentId: student.id, 
+        vacancyId: vacancy.id, 
+        cycleId: cycle.id, 
+        fileId: 99999, // Non-existent file ID
+        status: 'APPROVED'
+      })
+
+      const res = await app.inject({
+        url: `/reports/${report.id}/download`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(404)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'File not found')
+    })
+
+    it('Returns 403 when user lacks VIEW_REPORT permission', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password,
+        role: 'base',
+        permissions: [] // No permissions
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: '/reports/1/download',
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(403)
+    })
+  })
 })

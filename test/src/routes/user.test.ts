@@ -563,5 +563,155 @@ describe('Users API', () => {
       expect(res.statusCode).toBe(400)
     })
   })
+
+  describe('GET /users/:id', () => {
+    const METHOD = 'GET'
+    
+    it('Success get user by ID', async () => {
+      const password = faker.string.alphanumeric(10)
+      const authenticatedUser = await userFactory.create({
+        password,
+        permissions: ['VIEW_USER']
+      })
+      
+      const targetUser = await userFactory.create()
+      
+      const token = await jwtService.sign({
+        id: authenticatedUser.id,
+        name: authenticatedUser.name,
+        user: authenticatedUser.user,
+        role: authenticatedUser.role,
+        permissions: authenticatedUser.permissions,
+        createdAt: authenticatedUser.createdAt,
+        updatedAt: authenticatedUser.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: `/users/${targetUser.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body).toHaveProperty('id', targetUser.id)
+      expect(body).toHaveProperty('name', targetUser.name)
+      expect(body).toHaveProperty('user', targetUser.user)
+      expect(body).toHaveProperty('role', targetUser.role)
+      expect(body).toHaveProperty('permissions')
+      expect(body).toHaveProperty('createdAt')
+      expect(body).toHaveProperty('updatedAt')
+      expect(body.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+      expect(body.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+    })
+
+    it('Returns 404 when user not found', async () => {
+      const password = faker.string.alphanumeric(10)
+      const authenticatedUser = await userFactory.create({
+        password,
+        permissions: ['VIEW_USER']
+      })
+      
+      const token = await jwtService.sign({
+        id: authenticatedUser.id,
+        name: authenticatedUser.name,
+        user: authenticatedUser.user,
+        role: authenticatedUser.role,
+        permissions: authenticatedUser.permissions,
+        createdAt: authenticatedUser.createdAt,
+        updatedAt: authenticatedUser.updatedAt,
+        scope: 'user'
+      })
+
+      const nonExistentUserId = 99999
+
+      const res = await app.inject({
+        url: `/users/${nonExistentUserId}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+      
+      expect(res.statusCode).toBe(404)
+      const body = res.json()
+      expect(body).toHaveProperty('message', 'User not found')
+    })
+
+    it('Returns 400 when authorization header is missing', async () => {
+      const targetUser = await userFactory.create()
+
+      const res = await app.inject({
+        url: `/users/${targetUser.id}`,
+        method: METHOD
+      })
+
+      expect(res.statusCode).toBe(400)
+    })
+
+    it('Returns 403 when user lacks VIEW_USER permission', async () => {
+      const password = faker.string.alphanumeric(10)
+      const authenticatedUser = await userFactory.create({
+        password,
+        role: 'base',
+        permissions: ['VIEW_STUDENT']
+      })
+      
+      const targetUser = await userFactory.create()
+      
+      const token = await jwtService.sign({
+        id: authenticatedUser.id,
+        name: authenticatedUser.name,
+        user: authenticatedUser.user,
+        role: authenticatedUser.role,
+        permissions: authenticatedUser.permissions,
+        createdAt: authenticatedUser.createdAt,
+        updatedAt: authenticatedUser.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: `/users/${targetUser.id}`,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+
+      expect(res.statusCode).toBe(403)
+    })
+
+    it('Returns 400 when user ID parameter is invalid', async () => {
+      const password = faker.string.alphanumeric(10)
+      const authenticatedUser = await userFactory.create({
+        password,
+        permissions: ['VIEW_USER']
+      })
+      
+      const token = await jwtService.sign({
+        id: authenticatedUser.id,
+        name: authenticatedUser.name,
+        user: authenticatedUser.user,
+        role: authenticatedUser.role,
+        permissions: authenticatedUser.permissions,
+        createdAt: authenticatedUser.createdAt,
+        updatedAt: authenticatedUser.updatedAt,
+        scope: 'user'
+      })
+
+      const res = await app.inject({
+        url: '/users/invalid-id',
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      })
+
+      expect(res.statusCode).toBe(400)
+    })
+  })
 })
 
