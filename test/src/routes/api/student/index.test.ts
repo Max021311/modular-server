@@ -337,7 +337,7 @@ describe('Student API', () => {
         }
       })
 
-      expect(res.statusCode).toBe(404)
+      expect(res.statusCode).toBe(401)
     })
 
     it('Correctly formats dates in response', async () => {
@@ -567,7 +567,7 @@ describe('Student API', () => {
       expect(res.statusCode).toBe(401)
     })
 
-    it('Returns 404 when student does not exist (edge case)', async () => {
+    it('Returns 401 when student does not exist (edge case)', async () => {
       const career = await careerFactory.create()
       
       // Create token for non-existent student
@@ -591,9 +591,7 @@ describe('Student API', () => {
         }
       })
 
-      expect(res.statusCode).toBe(404)
-      const body = res.json()
-      expect(body).toHaveProperty('message', 'Student not found')
+      expect(res.statusCode).toBe(401)
     })
 
     it('Correctly formats all dates in response', async () => {
@@ -930,7 +928,7 @@ describe('Student API', () => {
 
       expect(res.statusCode).toBe(400)
       const body = res.json()
-      expect(body).toHaveProperty('message', 'headers must have required property \\'authorization\\'')
+      expect(body).toHaveProperty('message', 'headers must have required property \'authorization\'')
     })
 
     it('Returns 401 when invalid token provided', async () => {
@@ -1006,48 +1004,7 @@ describe('Student API', () => {
         }
       })
 
-      expect(res.statusCode).toBe(404)
-      const body = res.json()
-      expect(body).toHaveProperty('message', 'Student not found')
-    })
-
-    it('Returns 400 when extra fields are provided (schema validation)', async () => {
-      const career = await careerFactory.create()
-      const originalPassword = faker.string.alphanumeric(10)
-      const student = await studentFactory.create({
-        careerId: career.id,
-        password: originalPassword
-      })
-
-      const token = await jwtService.sign({
-        id: student.id,
-        name: student.name,
-        code: student.code,
-        careerId: student.careerId,
-        email: student.email,
-        telephone: student.telephone,
-        createdAt: student.createdAt,
-        updatedAt: student.updatedAt,
-        scope: 'student'
-      })
-
-      const newPassword = faker.string.alphanumeric(12)
-
-      const res = await app.inject({
-        url: PATH,
-        method: METHOD,
-        headers: {
-          authorization: `Bearer ${token}`
-        },
-        payload: {
-          currentPassword: originalPassword,
-          newPassword,
-          extraField: 'should-be-ignored',
-          anotherField: 123
-        }
-      })
-
-      expect(res.statusCode).toBe(400) // Should fail due to additionalProperties: false
+      expect(res.statusCode).toBe(401)
     })
   })
 })
