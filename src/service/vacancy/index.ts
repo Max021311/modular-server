@@ -18,11 +18,11 @@ type ConstructorParams = ModuleConstructorParams<
   VacancyServiceConfigI
 >
 
-type Vacancy = Pick<Tables['Vacancies']['base'], 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'createdAt'|'updatedAt'|'deletedAt'>
+type Vacancy = Pick<Tables['Vacancies']['base'], 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'categoryId'|'location'|'schedule'|'mode'|'createdAt'|'updatedAt'|'deletedAt'>
 type CycleJoin = PrefixedPick<Tables['Cycles']['base'], 'id'|'slug'|'isCurrent'|'createdAt'|'updatedAt', 'cycle_'>
 type DepartmentJoin = PrefixedPick<Tables['Departments']['base'], 'id'|'name'|'address'|'phone'|'email'|'chiefName'|'createdAt'|'updatedAt', 'department_'>
-
-type VacancyWithJoins = Vacancy & AtLeastOneJoin<[CycleJoin, DepartmentJoin, { used_slots: number }]>
+type CategoryJoin = PrefixedPick<Tables['Categories']['base'], 'id'|'name'|'createdAt'|'updatedAt', 'category_'>
+type VacancyWithJoins = Vacancy & AtLeastOneJoin<[CycleJoin, DepartmentJoin, CategoryJoin, { used_slots: number }]>
 
 export class VacancyService implements VacancyServiceI {
   private readonly logger: ConstructorParams['context']['logger']
@@ -50,6 +50,10 @@ export class VacancyService implements VacancyServiceI {
         db.ref('cycleId').withSchema('Vacancies'),
         db.ref('departmentId').withSchema('Vacancies'),
         db.ref('disabled').withSchema('Vacancies'),
+        db.ref('categoryId').withSchema('Vacancies'),
+        db.ref('location').withSchema('Vacancies'),
+        db.ref('schedule').withSchema('Vacancies'),
+        db.ref('mode').withSchema('Vacancies'),
         db.ref('createdAt').withSchema('Vacancies'),
         db.ref('updatedAt').withSchema('Vacancies'),
         db.ref('deletedAt').withSchema('Vacancies')
@@ -81,6 +85,16 @@ export class VacancyService implements VacancyServiceI {
       )
   }
 
+  private applyCategoryJoin <T extends Knex.QueryBuilder> (query: T, db: Knex) {
+    return query.leftJoin('Categories', 'Vacancies.categoryId', '=', 'Categories.id')
+      .select(
+        db.ref('id').withSchema('Categories').as('category_id'),
+        db.ref('name').withSchema('Categories').as('category_name'),
+        db.ref('createdAt').withSchema('Categories').as('category_createdAt'),
+        db.ref('updatedAt').withSchema('Categories').as('category_updatedAt')
+      )
+  }
+
   private applyUsedSlotsJoin <T extends Knex.QueryBuilder> (query: T, db: Knex) {
     return query
       .select(
@@ -92,7 +106,7 @@ export class VacancyService implements VacancyServiceI {
   }
 
   async findAndCount (params: FindAndCountParams) {
-    const { limit, offset, order, search, includeCycle, includeDepartment, includeUsedSlots, departmentId, cycleId, studentId } = params
+    const { limit, offset, order, search, includeCycle, includeDepartment, includeCategory, includeUsedSlots, departmentId, cycleId, studentId } = params
     const db = this.db
 
     let countQuery = db.table('Vacancies')
@@ -144,6 +158,9 @@ export class VacancyService implements VacancyServiceI {
     if (includeDepartment === true) {
       selectQuery = selectQuery.modify(this.applyDepartmentJoin, db)
     }
+    if (includeCategory === true) {
+      selectQuery = selectQuery.modify(this.applyCategoryJoin, db)
+    }
     if (includeUsedSlots === true) {
       selectQuery = selectQuery.modify(this.applyUsedSlotsJoin, db)
     }
@@ -167,6 +184,10 @@ export class VacancyService implements VacancyServiceI {
           createdAt: result.createdAt,
           updatedAt: result.updatedAt,
           deletedAt: result.deletedAt,
+          categoryId: result.categoryId,
+          location: result.location,
+          schedule: result.schedule,
+          mode: result.mode,
           cycle: 'cycle_id' in result
             ? {
                 id: result.cycle_id,
@@ -188,6 +209,14 @@ export class VacancyService implements VacancyServiceI {
                 updatedAt: result.department_updatedAt
               }
             : undefined,
+          category: 'category_id' in result
+            ? {
+                id: result.category_id,
+                name: result.category_name,
+                createdAt: result.category_createdAt,
+                updatedAt: result.category_updatedAt
+              }
+            : undefined,
           usedSlots: 'used_slots' in result ? Number(result.used_slots) : undefined
         }
         return vacancy
@@ -203,6 +232,7 @@ export class VacancyService implements VacancyServiceI {
 
     if (opts?.includeCycle) query = query.modify(this.applyCycleJoin, db)
     if (opts?.includeDepartment) query = query.modify(this.applyDepartmentJoin, db)
+    if (opts?.includeCategory) query = query.modify(this.applyCategoryJoin, db)
     if (opts?.includeUsedSlots) query = query.modify(this.applyUsedSlotsJoin, db)
 
     const result = await query
@@ -222,6 +252,10 @@ export class VacancyService implements VacancyServiceI {
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
       deletedAt: result.deletedAt,
+      categoryId: result.categoryId,
+      location: result.location,
+      schedule: result.schedule,
+      mode: result.mode,
       cycle: 'cycle_id' in result
         ? {
             id: result.cycle_id,
@@ -241,6 +275,14 @@ export class VacancyService implements VacancyServiceI {
             chiefName: result.department_chiefName,
             createdAt: result.department_createdAt,
             updatedAt: result.department_updatedAt
+          }
+        : undefined,
+      category: 'category_id' in result
+        ? {
+            id: result.category_id,
+            name: result.category_name,
+            createdAt: result.category_createdAt,
+            updatedAt: result.category_updatedAt
           }
         : undefined,
       usedSlots: 'used_slots' in result ? Number(result.used_slots) : undefined
@@ -270,7 +312,11 @@ export class VacancyService implements VacancyServiceI {
       disabled: result.disabled,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
-      deletedAt: result.deletedAt
+      deletedAt: result.deletedAt,
+      categoryId: result.categoryId,
+      location: result.location,
+      schedule: result.schedule,
+      mode: result.mode
     }
 
     return createdVacancy
@@ -297,7 +343,11 @@ export class VacancyService implements VacancyServiceI {
       disabled: result.disabled,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
-      deletedAt: result.deletedAt
+      deletedAt: result.deletedAt,
+      categoryId: result.categoryId,
+      location: result.location,
+      schedule: result.schedule,
+      mode: result.mode
     }
 
     return updatedVacancy
