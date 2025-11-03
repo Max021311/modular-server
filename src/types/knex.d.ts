@@ -10,6 +10,7 @@ import type { ComissionOffice, CreateComissionOffice, UpdateComissionOffice } fr
 import type { FinalReport, CreateFinalReport, UpdateFinalReport } from './final-report.js'
 import type { Report, CreateReport, UpdateReport } from './report.js'
 import type { File, CreateFile, UpdateFile } from './file.js'
+import type { Category, CreateCategory, UpdateCategory } from './category.js'
 
 declare module 'knex/types/tables.js' {
   interface Tables {
@@ -24,5 +25,6 @@ declare module 'knex/types/tables.js' {
     FinalReports: Knex.CompositeTableType<FinalReport, CreateFinalReport, UpdateFinalReport>
     Reports: Knex.CompositeTableType<Report, CreateReport, UpdateReport>
     Files: Knex.CompositeTableType<File, CreateFile, UpdateFile>
+    Categories: Knex.CompositeTableType<Category, CreateCategory, UpdateCategory>
   }
 }
