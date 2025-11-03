@@ -4,8 +4,12 @@ export async function seed (knex: Knex): Promise<void> {
   await knex('Categories').del()
 
   await knex('Categories').insert([{
-    name: 'Prueba'
+    name: 'Prueba',
+    createdAt: new Date(),
+    updatedAt: new Date()
   }, {
-    name: 'Tecnología'
+    name: 'Tecnología',
+    createdAt: new Date(),
+    updatedAt: new Date()
   }])
 };
