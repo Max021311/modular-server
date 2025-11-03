@@ -43,13 +43,27 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         },
         required: ['id', 'name', 'address', 'phone', 'email', 'chiefName', 'createdAt', 'updatedAt']
       },
+      categoryId: { type: 'integer', nullable: true },
+      category: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer' },
+          name: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' }
+        },
+        required: ['id', 'name', 'createdAt', 'updatedAt']
+      },
+      location: { type: 'string', enum: ['north', 'south', 'east', 'west', 'center'] },
+      schedule: { type: 'string', enum: ['morning', 'afternoon', 'saturday'] },
+      mode: { type: 'string', enum: ['presential', 'remote'] },
       usedSlots: { type: 'integer' },
       disabled: { type: 'boolean' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
       deletedAt: { type: 'string', format: 'date-time', nullable: true }
     },
-    required: ['id', 'name', 'description', 'slots', 'cycleId', 'departmentId', 'disabled', 'createdAt', 'updatedAt']
+    required: ['id', 'name', 'description', 'slots', 'cycleId', 'departmentId', 'location', 'schedule', 'mode', 'disabled', 'createdAt', 'updatedAt']
   } as const satisfies JSONSchema
 
   const vacanciesQuerySchema = {
@@ -75,6 +89,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       search: { type: 'string' },
       includeCycle: { type: 'boolean', default: true },
       includeDepartment: { type: 'boolean', default: true },
+      includeCategory: { type: 'boolean', default: false },
       includeUsedSlots: { type: 'boolean', default: false }
     }
   } as const satisfies JSONSchema
@@ -84,6 +99,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     properties: {
       includeCycle: { type: 'boolean', default: true },
       includeDepartment: { type: 'boolean', default: true },
+      includeCategory: { type: 'boolean', default: false },
       includeUsedSlots: { type: 'boolean', default: false }
     }
   } as const satisfies JSONSchema
@@ -126,6 +142,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         search,
         includeCycle = true,
         includeDepartment = true,
+        includeCategory = false,
         includeUsedSlots = false
       } = request.query
 
@@ -143,6 +160,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         search,
         includeCycle,
         includeDepartment,
+        includeCategory,
         includeUsedSlots,
         cycleId: currentCycle.id
       })
@@ -164,6 +182,13 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
               ...record.department,
               createdAt: record.department.createdAt.toISOString(),
               updatedAt: record.department.updatedAt.toISOString()
+            }
+          : undefined,
+        category: record.category
+          ? {
+              ...record.category,
+              createdAt: record.category.createdAt.toISOString(),
+              updatedAt: record.category.updatedAt.toISOString()
             }
           : undefined
       }))
@@ -205,11 +230,12 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     async handler (request, reply) {
       const services = request.server.services
       const { id } = request.params
-      const { includeCycle = true, includeDepartment = true, includeUsedSlots = false } = request.query
+      const { includeCycle = true, includeDepartment = true, includeCategory = false, includeUsedSlots = false } = request.query
 
       const vacancy = await services.vacancyService().findById(id, {
         includeCycle,
         includeDepartment,
+        includeCategory,
         includeUsedSlots
       })
 
@@ -237,6 +263,13 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
               ...vacancy.department,
               createdAt: vacancy.department.createdAt.toISOString(),
               updatedAt: vacancy.department.updatedAt.toISOString()
+            }
+          : undefined,
+        category: vacancy.category
+          ? {
+              ...vacancy.category,
+              createdAt: vacancy.category.createdAt.toISOString(),
+              updatedAt: vacancy.category.updatedAt.toISOString()
             }
           : undefined
       }
@@ -279,7 +312,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
             default: 0
           },
           search: { type: 'string' },
-          includeCycle: { type: 'boolean', default: true }
+          includeCycle: { type: 'boolean', default: true },
+          includeCategory: { type: 'boolean', default: false }
         }
       } as const satisfies JSONSchema,
       response: {
@@ -303,7 +337,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         offset = 0,
         order,
         search,
-        includeCycle = true
+        includeCycle = true,
+        includeCategory = false
       } = request.query
       const studentId = request.student.id
 
@@ -314,6 +349,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         search,
         includeCycle,
         includeDepartment: false,
+        includeCategory,
         includeUsedSlots: false,
         studentId
       })
@@ -335,6 +371,13 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
               ...record.department,
               createdAt: record.department.createdAt.toISOString(),
               updatedAt: record.department.updatedAt.toISOString()
+            }
+          : undefined,
+        category: record.category
+          ? {
+              ...record.category,
+              createdAt: record.category.createdAt.toISOString(),
+              updatedAt: record.category.updatedAt.toISOString()
             }
           : undefined
       }))

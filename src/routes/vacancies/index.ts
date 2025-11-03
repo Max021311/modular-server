@@ -47,12 +47,26 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         },
         required: ['id', 'name', 'address', 'phone', 'email', 'chiefName', 'createdAt', 'updatedAt']
       },
+      categoryId: { type: 'integer', nullable: true },
+      category: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer' },
+          name: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' }
+        },
+        required: ['id', 'name', 'createdAt', 'updatedAt']
+      },
+      location: { type: 'string', enum: ['north', 'south', 'east', 'west', 'center'] },
+      schedule: { type: 'string', enum: ['morning', 'afternoon', 'saturday'] },
+      mode: { type: 'string', enum: ['presential', 'remote'] },
       disabled: { type: 'boolean' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
       deletedAt: { type: 'string', format: 'date-time', nullable: true }
     },
-    required: ['id', 'name', 'description', 'slots', 'cycleId', 'departmentId', 'disabled', 'createdAt', 'updatedAt']
+    required: ['id', 'name', 'description', 'slots', 'cycleId', 'departmentId', 'location', 'schedule', 'mode', 'disabled', 'createdAt', 'updatedAt']
   } as const satisfies JSONSchema
 
   const vacanciesQuerySchema = {
@@ -78,6 +92,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       search: { type: 'string' },
       includeCycle: { type: 'boolean', default: false },
       includeDepartment: { type: 'boolean', default: false },
+      includeCategory: { type: 'boolean', default: false },
       departmentId: { type: 'integer' },
       cycleId: { type: 'integer' },
       studentId: { type: 'integer' }
@@ -114,7 +129,8 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     type: 'object',
     properties: {
       includeCycle: { type: 'boolean', default: false },
-      includeDepartment: { type: 'boolean', default: false }
+      includeDepartment: { type: 'boolean', default: false },
+      includeCategory: { type: 'boolean', default: false }
     }
   } as const satisfies JSONSchema
 
@@ -126,9 +142,13 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       slots: { type: 'integer' },
       cycleId: { type: 'integer' },
       departmentId: { type: 'integer' },
+      categoryId: { type: 'integer' },
+      location: { type: 'string', enum: ['north', 'south', 'east', 'west', 'center'] },
+      schedule: { type: 'string', enum: ['morning', 'afternoon', 'saturday'] },
+      mode: { type: 'string', enum: ['presential', 'remote'] },
       disabled: { type: 'boolean', default: false }
     },
-    required: ['name', 'description', 'slots', 'cycleId', 'departmentId', 'disabled']
+    required: ['name', 'description', 'slots', 'cycleId', 'departmentId', 'location', 'schedule', 'mode', 'disabled']
   } as const satisfies JSONSchema
 
   const updateVacancySchema = {
@@ -137,6 +157,10 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       name: { type: 'string' },
       description: { type: 'string' },
       slots: { type: 'integer' },
+      categoryId: { type: 'integer' },
+      location: { type: 'string', enum: ['north', 'south', 'east', 'west', 'center'] },
+      schedule: { type: 'string', enum: ['morning', 'afternoon', 'saturday'] },
+      mode: { type: 'string', enum: ['presential', 'remote'] },
       disabled: { type: 'boolean' }
     }
   } as const satisfies JSONSchema
@@ -178,6 +202,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         search,
         includeCycle = false,
         includeDepartment = false,
+        includeCategory = false,
         departmentId,
         cycleId,
         studentId
@@ -190,6 +215,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         search,
         includeCycle,
         includeDepartment,
+        includeCategory,
         departmentId,
         cycleId,
         studentId
@@ -212,6 +238,13 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
               ...record.department,
               createdAt: record.department.createdAt.toISOString(),
               updatedAt: record.department.updatedAt.toISOString()
+            }
+          : undefined,
+        category: record.category
+          ? {
+              ...record.category,
+              createdAt: record.category.createdAt.toISOString(),
+              updatedAt: record.category.updatedAt.toISOString()
             }
           : undefined
       }))
@@ -252,7 +285,10 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       if (department === null) throw new HttpError('Conflict: department doesn\'t found', 409)
 
       try {
-        const createdVacancy = await services.vacancyService().create(vacancy)
+        const createdVacancy = await services.vacancyService().create({
+          ...vacancy,
+          categoryId: vacancy.categoryId ?? null
+        })
 
         const response = {
           ...createdVacancy,
@@ -301,11 +337,12 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     async handler (request, reply) {
       const services = request.server.services
       const { id } = request.params
-      const { includeCycle = false, includeDepartment = false } = request.query
+      const { includeCycle = false, includeDepartment = false, includeCategory = false } = request.query
 
       const vacancy = await services.vacancyService().findById(id, {
         includeCycle,
-        includeDepartment
+        includeDepartment,
+        includeCategory
       })
 
       if (!vacancy) {
@@ -332,6 +369,13 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
               ...vacancy.department,
               createdAt: vacancy.department.createdAt.toISOString(),
               updatedAt: vacancy.department.updatedAt.toISOString()
+            }
+          : undefined,
+        category: vacancy.category
+          ? {
+              ...vacancy.category,
+              createdAt: vacancy.category.createdAt.toISOString(),
+              updatedAt: vacancy.category.updatedAt.toISOString()
             }
           : undefined
       }

@@ -12,6 +12,7 @@ import type { FileServiceI } from './file/types.js'
 import type { ComissionOfficeServiceI } from './comission-office/types.js'
 import type { FinalReportServiceI } from './final-report/types.js'
 import type { ReportServiceI } from './report/types.js'
+import type { CategoryServiceI } from './category/types.js'
 import type { BaseLogger } from 'pino'
 import type { ConnectionManager } from '#src/common/bd/index.js'
 
@@ -32,6 +33,7 @@ export interface Services {
   comissionOfficeService: () => ComissionOfficeServiceI
   finalReportService: () => FinalReportServiceI
   reportService: () => ReportServiceI
+  categoryService: () => CategoryServiceI
 }
 
 export interface ApplicationContext <T extends (keyof Services | unknown) = keyof Services> {

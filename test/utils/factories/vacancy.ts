@@ -21,6 +21,10 @@ export const vacancyFactory = VacancyFactory.define(({ onCreate, params }) => {
     slots: faker.number.int({ min: 1, max: 10 }),
     cycleId: params.cycleId ?? 1,
     departmentId: params.departmentId ?? 1,
+    categoryId: params.categoryId ?? null,
+    location: faker.helpers.arrayElement(['north', 'south', 'east', 'west', 'center'] as const),
+    schedule: faker.helpers.arrayElement(['morning', 'afternoon', 'saturday'] as const),
+    mode: faker.helpers.arrayElement(['presential', 'remote'] as const),
     disabled: false,
     createdAt: new Date(),
     updatedAt: new Date()

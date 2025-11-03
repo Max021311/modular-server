@@ -1,8 +1,8 @@
 import type { UpdateVacancy, CreateVacancy, Vacancy } from '#src/types/vacancy.js'
 import type { CyclePicked } from '../cycle/types.js'
 import type { DepartmentPicked } from '../department/types.js'
-
-export type VacancyPicked = Pick<Vacancy, 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'createdAt'|'updatedAt'|'deletedAt'>
+import type { CategoryPicked } from '../category/types.js'
+export type VacancyPicked = Pick<Vacancy, 'id'|'name'|'description'|'slots'|'cycleId'|'departmentId'|'disabled'|'categoryId'|'location'|'schedule'|'mode'|'createdAt'|'updatedAt'|'deletedAt'>
 
 export { CreateVacancy, UpdateVacancy } from '#src/types/vacancy.js'
 
@@ -13,6 +13,7 @@ export interface FindAndCountParams {
   search?: string
   includeCycle?: boolean
   includeDepartment?: boolean
+  includeCategory?: boolean
   includeUsedSlots?: boolean
   departmentId?: number
   cycleId?: number
@@ -28,12 +29,14 @@ export interface VacancyServiceConfigI {
 export interface VacancyWithJoins extends VacancyPicked {
   cycle?: CyclePicked
   department?: DepartmentPicked
+  category?: CategoryPicked
   usedSlots?: number
 }
 
 export interface FindByIdOpts {
   includeCycle?: boolean
   includeDepartment?: boolean
+  includeCategory?: boolean
   includeUsedSlots?: boolean
 }
 

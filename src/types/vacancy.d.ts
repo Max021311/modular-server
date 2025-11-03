@@ -9,6 +9,10 @@ interface Vacancy {
   createdAt: Date
   updatedAt: Date
   deletedAt: Date | null
+  categoryId: number | null
+  location: 'north' | 'south' | 'east' | 'west' | 'center'
+  schedule: 'morning' | 'afternoon' | 'saturday'
+  mode: 'presential' | 'remote'
   searchVector: string
 }
 

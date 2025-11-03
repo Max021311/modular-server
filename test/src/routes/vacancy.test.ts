@@ -8,6 +8,7 @@ import { departmentFactory } from '#test/utils/factories/department.js'
 import { studentFactory } from '#test/utils/factories/student.js'
 import { careerFactory } from '#test/utils/factories/career.js'
 import { vacancyToStudentFactory } from '#test/utils/factories/vacancy-to-student.js'
+import { categoryFactory } from '#test/utils/factories/category.js'
 import { faker } from '@faker-js/faker'
 import configuration from '#src/common/configuration.js'
 import { JwtService } from '#src/service/jwt/index.js'
@@ -225,6 +226,110 @@ describe('Vacancies API', () => {
       expect(record.department).toHaveProperty('id', department.id)
     })
 
+    it('Success get vacancies with includeCategory=true', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const category = await categoryFactory.create({ name: 'Technology' })
+
+      await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id,
+        categoryId: category.id
+      })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          includeCategory: 'true'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(1)
+      expect(body.records).toHaveLength(1)
+
+      const record = body.records[0]
+      expect(record).toHaveProperty('category')
+      expect(record.category).toHaveProperty('id', category.id)
+      expect(record.category).toHaveProperty('name', category.name)
+    })
+
+    it('Success get vacancies with all includes (cycle, department, category)', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const category = await categoryFactory.create({ name: 'Healthcare' })
+
+      await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id,
+        categoryId: category.id
+      })
+
+      const res = await app.inject({
+        url: PATH,
+        method: METHOD,
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          includeCycle: 'true',
+          includeDepartment: 'true',
+          includeCategory: 'true'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      expect(body.total).toBe(1)
+      expect(body.records).toHaveLength(1)
+
+      const record = body.records[0]
+      expect(record).toHaveProperty('cycle')
+      expect(record).toHaveProperty('department')
+      expect(record).toHaveProperty('category')
+      expect(record.cycle).toHaveProperty('id', cycle.id)
+      expect(record.department).toHaveProperty('id', department.id)
+      expect(record.category).toHaveProperty('id', category.id)
+      expect(record.category).toHaveProperty('name', category.name)
+    })
+
     it('Success get vacancies with search query param', async () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
@@ -406,6 +511,7 @@ describe('Vacancies API', () => {
           authorization: `Bearer ${token}`
         }
       })
+
       
       expect(res.statusCode).toBe(200)
       const body = res.json()
@@ -1320,6 +1426,114 @@ describe('Vacancies API', () => {
       expect(body.department).toHaveProperty('name', department.name)
     })
 
+    it('Success get vacancy by ID with includeCategory=true', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create()
+      const department = await departmentFactory.create()
+      const category = await categoryFactory.create({ name: 'Finance' })
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id,
+        categoryId: category.id
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: 'GET',
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          includeCategory: 'true'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      
+      expect(body).toHaveProperty('id', vacancy.id)
+      expect(body).toHaveProperty('category')
+      expect(body.category).toHaveProperty('id', category.id)
+      expect(body.category).toHaveProperty('name', category.name)
+      
+      // Should not include cycle or department data
+      expect(body.cycle).toBeUndefined()
+      expect(body.department).toBeUndefined()
+    })
+
+    it('Success get vacancy by ID with all includes (cycle, department, category)', async () => {
+      const password = faker.string.alphanumeric(10)
+      const user = await userFactory.create({
+        password
+      })
+      
+      const token = await jwtService.sign({
+        id: user.id,
+        name: user.name,
+        user: user.user,
+        role: user.role,
+        permissions: user.permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        scope: 'user'
+      })
+
+      const cycle = await cycleFactory.create({ slug: '2025A', isCurrent: true })
+      const department = await departmentFactory.create({ name: 'Engineering' })
+      const category = await categoryFactory.create({ name: 'Research' })
+      const vacancy = await vacancyFactory.create({ 
+        cycleId: cycle.id, 
+        departmentId: department.id,
+        categoryId: category.id
+      })
+
+      const res = await app.inject({
+        url: `/vacancies/${vacancy.id}`,
+        method: 'GET',
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        query: {
+          includeCycle: 'true',
+          includeDepartment: 'true',
+          includeCategory: 'true'
+        }
+      })
+      
+      expect(res.statusCode).toBe(200)
+      const body = res.json()
+      
+      expect(body).toHaveProperty('id', vacancy.id)
+      expect(body).toHaveProperty('cycle')
+      expect(body).toHaveProperty('department')
+      expect(body).toHaveProperty('category')
+      
+      expect(body.cycle).toHaveProperty('id', cycle.id)
+      expect(body.cycle).toHaveProperty('slug', cycle.slug)
+      expect(body.cycle).toHaveProperty('isCurrent', cycle.isCurrent)
+      
+      expect(body.department).toHaveProperty('id', department.id)
+      expect(body.department).toHaveProperty('name', department.name)
+      
+      expect(body.category).toHaveProperty('id', category.id)
+      expect(body.category).toHaveProperty('name', category.name)
+    })
+
     it('Returns 404 when vacancy does not exist', async () => {
       const password = faker.string.alphanumeric(10)
       const user = await userFactory.create({
@@ -1511,6 +1725,9 @@ describe('Vacancies API', () => {
         slots: 5,
         cycleId: cycle.id,
         departmentId: department.id,
+        location: 'center',
+        schedule: 'morning',
+        mode: 'presential',
         disabled: false
       }
 
@@ -1532,6 +1749,9 @@ describe('Vacancies API', () => {
       expect(body).toHaveProperty('slots', vacancyData.slots)
       expect(body).toHaveProperty('cycleId', vacancyData.cycleId)
       expect(body).toHaveProperty('departmentId', vacancyData.departmentId)
+      expect(body).toHaveProperty('location', vacancyData.location)
+      expect(body).toHaveProperty('schedule', vacancyData.schedule)
+      expect(body).toHaveProperty('mode', vacancyData.mode)
       expect(body).toHaveProperty('disabled', vacancyData.disabled)
       expect(body).toHaveProperty('createdAt')
       expect(body).toHaveProperty('updatedAt')
@@ -1570,6 +1790,9 @@ describe('Vacancies API', () => {
         slots: 2,
         cycleId: cycle.id,
         departmentId: department.id,
+        location: 'north',
+        schedule: 'afternoon',
+        mode: 'remote',
         disabled: true
       }
 
@@ -1585,6 +1808,9 @@ describe('Vacancies API', () => {
       expect(res.statusCode).toBe(201)
       const body = res.json()
       expect(body.disabled).toBe(true)
+      expect(body.location).toBe(vacancyData.location)
+      expect(body.schedule).toBe(vacancyData.schedule)
+      expect(body.mode).toBe(vacancyData.mode)
     })
 
     it('Returns 400 when required fields are missing', async () => {
@@ -1647,6 +1873,9 @@ describe('Vacancies API', () => {
         slots: 3,
         cycleId: cycle.id,
         departmentId: department.id,
+        location: 'center',
+        schedule: 'morning',
+        mode: 'presential',
         disabled: false
       }
 
@@ -1689,6 +1918,9 @@ describe('Vacancies API', () => {
         slots: 'invalid',
         cycleId: cycle.id,
         departmentId: department.id,
+        location: 'center',
+        schedule: 'morning',
+        mode: 'presential',
         disabled: false
       }
 
@@ -1730,6 +1962,9 @@ describe('Vacancies API', () => {
         slots: 3,
         cycleId: 'invalid',
         departmentId: department.id,
+        location: 'center',
+        schedule: 'morning',
+        mode: 'presential',
         disabled: false
       }
 
@@ -1771,6 +2006,9 @@ describe('Vacancies API', () => {
         slots: 3,
         cycleId: cycle.id,
         departmentId: 'invalid',
+        location: 'center',
+        schedule: 'morning',
+        mode: 'presential',
         disabled: false
       }
 
@@ -1796,6 +2034,9 @@ describe('Vacancies API', () => {
         slots: 5,
         cycleId: cycle.id,
         departmentId: department.id,
+        location: 'center',
+        schedule: 'morning',
+        mode: 'presential',
         disabled: false
       }
 
@@ -1837,6 +2078,9 @@ describe('Vacancies API', () => {
         slots: 5,
         cycleId: cycle.id,
         departmentId: department.id,
+        location: 'center',
+        schedule: 'morning',
+        mode: 'presential',
         disabled: false
       }
 
@@ -1878,6 +2122,9 @@ describe('Vacancies API', () => {
         slots: 5,
         cycleId: 99999,
         departmentId: department.id,
+        location: 'center',
+        schedule: 'morning',
+        mode: 'presential',
         disabled: false
       }
 
@@ -1919,6 +2166,9 @@ describe('Vacancies API', () => {
         slots: 5,
         cycleId: cycle.id,
         departmentId: 99999,
+        location: 'center',
+        schedule: 'morning',
+        mode: 'presential',
         disabled: false
       }
 
