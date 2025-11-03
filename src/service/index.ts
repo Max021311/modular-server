@@ -16,6 +16,7 @@ import { FileService } from './file/index.js'
 import { ComissionOfficeService } from './comission-office/index.js'
 import { FinalReportService } from './final-report/index.js'
 import { ReportService } from './report/index.js'
+import { CategoryService } from './category/index.js'
 
 interface GetServicesParams {
   logger: Logger
@@ -92,6 +93,9 @@ export function getServices (params: GetServicesParams): Services {
     context
   })
   context.services.reportService = lazyLoad((p) => new ReportService(p), {
+    context
+  })
+  context.services.categoryService = lazyLoad((p) => new CategoryService(p), {
     context
   })
   return context.services
