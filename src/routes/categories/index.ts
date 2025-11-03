@@ -5,6 +5,7 @@ import buildVerifyUserToken from '#src/prehandlers/verify-user-token.js'
 import { PERMISSIONS } from '#src/common/permissions.js'
 import { HttpError } from '#src/common/error.js'
 import { fastifyErrorSchema } from '#src/common/schemas.js'
+import { orderQueryToOrder } from '#src/common/order-query.js'
 import pg from 'pg'
 
 const { DatabaseError } = pg
@@ -52,6 +53,19 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         },
         required: ['authorization']
       } as const satisfies JSONSchema,
+      querystring: {
+        type: 'object',
+        properties: {
+          search: { type: 'string' },
+          order: {
+            type: 'string',
+            enum: ['Categories.createdAt', '-Categories.createdAt', 'Categories.id', '-Categories.id'],
+            description: "Order by the field name. A minus(-) means that we'll order the file collections in descending order.",
+            default: 'Categories.name'
+          }
+        },
+        additionalProperties: false
+      } as const satisfies JSONSchema,
       response: {
         200: {
           type: 'array',
@@ -63,7 +77,10 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
     async handler (request, reply) {
       const services = request.server.services
 
-      const categories = await services.categoryService().findAll()
+      const categories = await services.categoryService().findAll({
+        search: request.query.search,
+        order: orderQueryToOrder(request.query.order) ?? undefined
+      })
 
       const records = categories.map((category) => ({
         ...category,

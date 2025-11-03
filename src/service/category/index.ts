@@ -1,22 +1,27 @@
 import type {
   CategoryServiceI,
+  CategoryServiceConfigI,
   CreateCategory,
-  UpdateCategory
+  UpdateCategory,
+  FindParams
 } from './types.js'
 import type { ModuleConstructorParams } from '#src/service/types.js'
 
 type ConstructorParams = ModuleConstructorParams<
   'logger'|'connectionManager',
-  never
+  undefined,
+  CategoryServiceConfigI
 >
 
 export class CategoryService implements CategoryServiceI {
   private readonly logger: ConstructorParams['context']['logger']
   private readonly connectionManager: ConstructorParams['context']['connectionManager']
+  private readonly config: ConstructorParams['config']
 
   constructor (params: ConstructorParams) {
     this.logger = params.context.logger
     this.connectionManager = params.context.connectionManager
+    this.config = params.config
   }
 
   private get db () {
@@ -49,15 +54,18 @@ export class CategoryService implements CategoryServiceI {
     }
   }
 
-  async findAll () {
-    const results = await this.selectQuery.orderBy('Categories.name', 'asc')
+  async findAll (params: FindParams = {}) {
+    const { order, search } = params
+    let selectQuery = this.selectQuery
+    if (search) {
+      const { language } = this.config.textSearch
+      selectQuery = selectQuery
+        .whereRaw('search_vector @@ plainto_tsquery(?, ?)', [language, search])
+    }
+    if (order) selectQuery = selectQuery.orderBy([{ column: order[0], order: order[1] }, { column: 'Categories.id', order: order[1] }])
+    else selectQuery = selectQuery.orderBy('Categories.name', 'asc')
 
-    return results.map((result) => ({
-      id: result.id,
-      name: result.name,
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt
-    }))
+    return await selectQuery
   }
 
   async create (categoryData: Omit<CreateCategory, 'createdAt' | 'updatedAt'>) {

@@ -96,7 +96,10 @@ export function getServices (params: GetServicesParams): Services {
     context
   })
   context.services.categoryService = lazyLoad((p) => new CategoryService(p), {
-    context
+    context,
+    config: {
+      textSearch: configuration.textSearch
+    }
   })
   return context.services
 }
