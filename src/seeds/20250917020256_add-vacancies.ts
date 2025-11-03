@@ -11,6 +11,10 @@ export async function seed (knex: Knex): Promise<void> {
     cycleId: 5,
     departmentId: faker.number.int({ min: 1, max: 50 }),
     disabled: false,
+    categoryId: 1,
+    location: 'north',
+    schedule: 'morning',
+    mode: 'presential',
     createdAt: new Date(),
     updatedAt: new Date()
   }, {
@@ -20,6 +24,10 @@ export async function seed (knex: Knex): Promise<void> {
     cycleId: 5,
     departmentId: faker.number.int({ min: 1, max: 50 }),
     disabled: false,
+    categoryId: 1,
+    location: 'north',
+    schedule: 'morning',
+    mode: 'presential',
     createdAt: new Date(),
     updatedAt: new Date()
   }])
