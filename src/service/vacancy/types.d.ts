@@ -7,6 +7,7 @@ export type VacancyPicked = Pick<Vacancy, 'id'|'name'|'description'|'slots'|'cyc
 export { CreateVacancy, UpdateVacancy } from '#src/types/vacancy.js'
 
 export interface FindAndCountParams {
+  id?: number[]
   limit: number
   offset: number
   order?: [`Vacancies.${keyof Vacancy}`, 'asc' | 'desc']
@@ -18,6 +19,9 @@ export interface FindAndCountParams {
   departmentId?: number
   cycleId?: number
   studentId?: number
+  categoryId?: number
+  location?: 'north' | 'south' | 'east' | 'west' | 'center'
+  schedule?: 'morning' | 'afternoon' | 'saturday'
 }
 
 export interface VacancyServiceConfigI {
@@ -34,6 +38,13 @@ export interface VacancyWithJoins extends VacancyPicked {
 }
 
 export interface FindByIdOpts {
+  includeCycle?: boolean
+  includeDepartment?: boolean
+  includeCategory?: boolean
+  includeUsedSlots?: boolean
+}
+
+export interface FindByIdsOpts {
   includeCycle?: boolean
   includeDepartment?: boolean
   includeCategory?: boolean
@@ -57,6 +68,7 @@ export interface VacancyToStudentAssociation {
 export interface VacancyServiceI {
   findAndCount(params: FindAndCountParams): Promise<{ total: number, records: VacancyWithJoins[] }>
   findById(id: number, opts?: FindByIdOpts): Promise<VacancyWithJoins | null>
+  findByIds(ids: number[], opts?: FindByIdsOpts): Promise<VacancyWithJoins[]>
   create(vacancy: Omit<CreateVacancy, 'createdAt'|'updatedAt'>): Promise<VacancyPicked>
   update(id: number, vacancy: UpdateVacancy): Promise<VacancyPicked>
   validateAssociation(vacancyId: number, studentId: number, vacancyCycleId: number): Promise<VacancyAssociationValidationResult>

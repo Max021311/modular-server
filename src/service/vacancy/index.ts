@@ -2,6 +2,7 @@ import type {
   VacancyServiceI,
   FindAndCountParams,
   FindByIdOpts,
+  FindByIdsOpts,
   VacancyServiceConfigI,
   CreateVacancy,
   UpdateVacancy,
@@ -106,7 +107,7 @@ export class VacancyService implements VacancyServiceI {
   }
 
   async findAndCount (params: FindAndCountParams) {
-    const { limit, offset, order, search, includeCycle, includeDepartment, includeCategory, includeUsedSlots, departmentId, cycleId, studentId } = params
+    const { limit, offset, order, search, includeCycle, includeDepartment, includeCategory, includeUsedSlots, departmentId, cycleId, studentId, categoryId, location, schedule } = params
     const db = this.db
 
     let countQuery = db.table('Vacancies')
@@ -116,6 +117,11 @@ export class VacancyService implements VacancyServiceI {
       .offset(offset)
 
     let selectQuery = baseSelectQuery
+
+    if (params.id) {
+      selectQuery = selectQuery.whereIn('Vacancies.id', params.id)
+      countQuery = countQuery.whereIn('id', params.id)
+    }
 
     if (order) selectQuery = selectQuery.orderBy([{ column: order[0], order: order[1] }, { column: 'Vacancies.id', order: order[1] }])
 
@@ -135,6 +141,21 @@ export class VacancyService implements VacancyServiceI {
     if (cycleId) {
       selectQuery = selectQuery.where('Vacancies.cycleId', '=', cycleId)
       countQuery = countQuery.where('cycleId', '=', cycleId)
+    }
+
+    if (categoryId) {
+      selectQuery = selectQuery.where('Vacancies.categoryId', '=', categoryId)
+      countQuery = countQuery.where('categoryId', '=', categoryId)
+    }
+
+    if (location) {
+      selectQuery = selectQuery.where('Vacancies.location', '=', location)
+      countQuery = countQuery.where('location', '=', location)
+    }
+
+    if (schedule) {
+      selectQuery = selectQuery.where('Vacancies.schedule', '=', schedule)
+      countQuery = countQuery.where('schedule', '=', schedule)
     }
 
     if (studentId) {
@@ -289,6 +310,73 @@ export class VacancyService implements VacancyServiceI {
     }
 
     return vacancy
+  }
+
+  async findByIds (ids: number[], opts?: FindByIdsOpts) {
+    if (ids.length === 0) {
+      return []
+    }
+
+    const db = this.db
+    let query = this.selectQuery
+      .whereIn('Vacancies.id', ids)
+
+    if (opts?.includeCycle) query = query.modify(this.applyCycleJoin, db)
+    if (opts?.includeDepartment) query = query.modify(this.applyDepartmentJoin, db)
+    if (opts?.includeCategory) query = query.modify(this.applyCategoryJoin, db)
+    if (opts?.includeUsedSlots) query = query.modify(this.applyUsedSlotsJoin, db)
+
+    const results = await query
+
+    return results.map((result) => {
+      const vacancy = {
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        slots: result.slots,
+        cycleId: result.cycleId,
+        departmentId: result.departmentId,
+        disabled: result.disabled,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+        deletedAt: result.deletedAt,
+        categoryId: result.categoryId,
+        location: result.location,
+        schedule: result.schedule,
+        mode: result.mode,
+        cycle: 'cycle_id' in result
+          ? {
+              id: result.cycle_id,
+              slug: result.cycle_slug,
+              isCurrent: result.cycle_isCurrent,
+              createdAt: result.cycle_createdAt,
+              updatedAt: result.cycle_updatedAt
+            }
+          : undefined,
+        department: 'department_id' in result
+          ? {
+              id: result.department_id,
+              name: result.department_name,
+              address: result.department_address,
+              phone: result.department_phone,
+              email: result.department_email,
+              chiefName: result.department_chiefName,
+              createdAt: result.department_createdAt,
+              updatedAt: result.department_updatedAt
+            }
+          : undefined,
+        category: 'category_id' in result
+          ? {
+              id: result.category_id,
+              name: result.category_name,
+              createdAt: result.category_createdAt,
+              updatedAt: result.category_updatedAt
+            }
+          : undefined,
+        usedSlots: 'used_slots' in result ? Number(result.used_slots) : undefined
+      }
+      return vacancy
+    })
   }
 
   async create (vacancy: Omit<CreateVacancy, 'createdAt'|'updatedAt'>) {
