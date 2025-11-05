@@ -17,6 +17,7 @@ import { ComissionOfficeService } from './comission-office/index.js'
 import { FinalReportService } from './final-report/index.js'
 import { ReportService } from './report/index.js'
 import { CategoryService } from './category/index.js'
+import { PreferenceSystemService } from './preference-system/index.js'
 
 interface GetServicesParams {
   logger: Logger
@@ -99,6 +100,13 @@ export function getServices (params: GetServicesParams): Services {
     context,
     config: {
       textSearch: configuration.textSearch
+    }
+  })
+  context.services.preferenceSystemService = lazyLoad((p) => new PreferenceSystemService(p), {
+    context,
+    config: {
+      url: configuration.preferenceSystem.url,
+      apiKey: configuration.preferenceSystem.apiKey
     }
   })
   return context.services

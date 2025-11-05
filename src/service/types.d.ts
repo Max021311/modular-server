@@ -15,6 +15,7 @@ import type { ReportServiceI } from './report/types.js'
 import type { CategoryServiceI } from './category/types.js'
 import type { BaseLogger } from 'pino'
 import type { ConnectionManager } from '#src/common/bd/index.js'
+import type { PreferenceSystemServiceI } from './preference-system/types.js'
 
 export { BaseLogger as Logger } from 'pino'
 
@@ -34,6 +35,7 @@ export interface Services {
   finalReportService: () => FinalReportServiceI
   reportService: () => ReportServiceI
   categoryService: () => CategoryServiceI
+  preferenceSystemService: () => PreferenceSystemServiceI
 }
 
 export interface ApplicationContext <T extends (keyof Services | unknown) = keyof Services> {
