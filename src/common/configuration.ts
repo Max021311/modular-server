@@ -11,7 +11,11 @@ const configuration = {
     pass: process.env.EMAIL_PASSWORD ?? '',
     enableEmail: (process.env.EMAIL_ENABLE ?? '') === 'true'
   },
-  environment: process.env.ENVIRONMENT ?? 'development'
+  environment: process.env.ENVIRONMENT ?? 'development',
+  preferenceSystem: {
+    url: process.env.PREFERENCE_SYSTEM_URL ?? 'http://localhost:3010',
+    apiKey: process.env.PREFERENCE_SYSTEM_API_KEY ?? ''
+  }
 } as const
 
 export default configuration
