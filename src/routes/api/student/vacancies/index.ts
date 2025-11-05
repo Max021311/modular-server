@@ -483,7 +483,13 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       response: {
         200: {
           type: 'array',
-          items: vacancyResponseSchema
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'integer' }
+            },
+            required: ['id']
+          }
         } as const satisfies JSONSchema,
         404: fastifyErrorSchema
       }
@@ -510,32 +516,7 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         return
       }
 
-      // Fetch the vacancy details for the suggested IDs
-      const vacancies = await services.vacancyService().findByIds(suggestedIds, {
-        includeCycle: false,
-        includeDepartment: false,
-        includeCategory: true,
-        includeUsedSlots: true
-      })
-
-      const records = vacancies.map((record) => ({
-        ...record,
-        createdAt: record.createdAt.toISOString(),
-        updatedAt: record.updatedAt.toISOString(),
-        deletedAt: record.deletedAt === null ? null : record.deletedAt.toISOString(),
-        department: undefined,
-        cycle: undefined,
-        usedSlots: record.usedSlots,
-        category: record.category
-          ? {
-              ...record.category,
-              createdAt: record.category.createdAt.toISOString(),
-              updatedAt: record.category.updatedAt.toISOString()
-            }
-          : undefined
-      }))
-
-      await reply.status(200).send(records)
+      await reply.status(200).send(suggestedIds.map(id => ({ id })))
     }
   })
 }
