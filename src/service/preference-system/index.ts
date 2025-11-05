@@ -33,13 +33,13 @@ export class PreferenceSystemService implements PreferenceSystemServiceI {
     const { categoryId, location, schedule } = params
 
     try {
-      const response = await this.client.post<Array<{ categoryId: number }>>('/recomendar', {
+      const response = await this.client.post<Array<{ id: number }>>('/recomendar', {
         categoryID: categoryId,
         location,
         schedule
       })
 
-      return response.data.map(item => item.categoryId)
+      return response.data.map(item => item.id)
     } catch (error) {
       this.logger.error({ error }, 'Error calling preference system')
       return []
