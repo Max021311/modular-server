@@ -87,6 +87,10 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         default: 0
       },
       search: { type: 'string' },
+      id: {
+        type: 'array',
+        items: { type: 'integer', minimum: 1 }
+      },
       includeCycle: { type: 'boolean', default: true },
       includeDepartment: { type: 'boolean', default: true },
       includeCategory: { type: 'boolean', default: false },
@@ -152,8 +156,10 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         await reply.status(404).send({ message: 'No current cycle found' })
         return
       }
+      console.log(request.query.id)
 
       const result = await services.vacancyService().findAndCount({
+        id: request.query.id,
         limit,
         offset,
         order: orderQueryToOrder(order) ?? undefined,
@@ -449,6 +455,87 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
       await services.vacancyService().createAssociation(vacancyId, studentId)
 
       await reply.status(204).send()
+    }
+  })
+
+  server.route({
+    method: 'POST',
+    url: '/suggestion',
+    schema: {
+      description: 'Get vacancy suggestions based on category, location, and schedule',
+      tags: ['Student Vacancies'],
+      headers: {
+        type: 'object',
+        properties: {
+          authorization: { type: 'string', description: 'A JWT token with scope `student`' }
+        },
+        required: ['authorization']
+      } as const satisfies JSONSchema,
+      body: {
+        type: 'object',
+        properties: {
+          categoryId: { type: 'integer', minimum: 1 },
+          location: { type: 'string', enum: ['north', 'south', 'east', 'west', 'center'] },
+          schedule: { type: 'string', enum: ['morning', 'afternoon', 'saturday'] }
+        },
+        required: ['categoryId', 'location', 'schedule']
+      } as const satisfies JSONSchema,
+      response: {
+        200: {
+          type: 'array',
+          items: vacancyResponseSchema
+        } as const satisfies JSONSchema,
+        404: fastifyErrorSchema
+      }
+    },
+    // preHandler: verifyStudentToken,
+    async handler (request, reply) {
+      const services = request.server.services
+      const { categoryId, location, schedule } = request.body
+
+      const category = await services.categoryService().get(categoryId)
+      if (!category) {
+        throw new HttpError('Category not found', 404)
+      }
+
+      // Get suggested vacancy IDs from the preference system
+      const suggestedIds = await services.preferenceSystemService().suggest({
+        categoryId,
+        location,
+        schedule
+      })
+
+      if (suggestedIds.length === 0) {
+        await reply.status(200).send([])
+        return
+      }
+
+      // Fetch the vacancy details for the suggested IDs
+      const vacancies = await services.vacancyService().findByIds(suggestedIds, {
+        includeCycle: false,
+        includeDepartment: false,
+        includeCategory: true,
+        includeUsedSlots: true
+      })
+
+      const records = vacancies.map((record) => ({
+        ...record,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+        deletedAt: record.deletedAt === null ? null : record.deletedAt.toISOString(),
+        department: undefined,
+        cycle: undefined,
+        usedSlots: record.usedSlots,
+        category: record.category
+          ? {
+              ...record.category,
+              createdAt: record.category.createdAt.toISOString(),
+              updatedAt: record.category.updatedAt.toISOString()
+            }
+          : undefined
+      }))
+
+      await reply.status(200).send(records)
     }
   })
 }

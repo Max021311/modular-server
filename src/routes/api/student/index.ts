@@ -7,6 +7,7 @@ import comissionOfficesApiPlugin from './comission-offices/index.js'
 import finalReportsApiPlugin from './final-reports/index.js'
 import reportsApiPlugin from './reports/index.js'
 import verifyStudentToken from '#src/prehandlers/verify-student-token.js'
+import categoriesApiPlugin from './categories/index.js'
 import { fastifyErrorSchema } from '#src/common/schemas.js'
 import { HttpError } from '#src/common/error.js'
 import config from '#src/common/configuration.js'
@@ -396,5 +397,6 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
   fastify.register(comissionOfficesApiPlugin, { prefix: '/comission-offices' })
   fastify.register(finalReportsApiPlugin, { prefix: '/final-reports' })
   fastify.register(reportsApiPlugin, { prefix: '/reports' })
+  fastify.register(categoriesApiPlugin, { prefix: '/categories' })
 }
 export default routesPlugin
