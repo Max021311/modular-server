@@ -5,6 +5,7 @@ import cors from '@fastify/cors'
 import servicesPlugin from './plugins/services.js'
 import fastifySwagger from '@fastify/swagger'
 import fastifyMultipart from '@fastify/multipart'
+import querystringParser from '#src/common/querystring-parser.js'
 
 function build () {
   const server = fastify({
@@ -27,7 +28,8 @@ function build () {
           }
         }
       }
-    }
+    },
+    querystringParser: (str) => querystringParser.parse(str)
   })
 
   server
