@@ -91,6 +91,9 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         type: 'array',
         items: { type: 'integer', minimum: 1 }
       },
+      categoryId: { type: 'integer', minimum: 1 },
+      location: { type: 'string', enum: ['north', 'south', 'east', 'west', 'center'] },
+      schedule: { type: 'string', enum: ['morning', 'afternoon', 'saturday'] },
       includeCycle: { type: 'boolean', default: true },
       includeDepartment: { type: 'boolean', default: true },
       includeCategory: { type: 'boolean', default: false },
@@ -144,6 +147,9 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         offset = 0,
         order,
         search,
+        categoryId,
+        location,
+        schedule,
         includeCycle = true,
         includeDepartment = true,
         includeCategory = false,
@@ -156,14 +162,17 @@ const routesPlugin: FastifyPluginAsync = async function routesPlugin (fastify) {
         await reply.status(404).send({ message: 'No current cycle found' })
         return
       }
-      console.log(request.query.id)
 
       const result = await services.vacancyService().findAndCount({
         id: request.query.id,
+        disabled: false,
         limit,
         offset,
         order: orderQueryToOrder(order) ?? undefined,
         search,
+        categoryId,
+        location,
+        schedule,
         includeCycle,
         includeDepartment,
         includeCategory,
