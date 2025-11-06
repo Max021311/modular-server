@@ -22,6 +22,7 @@ export interface FindAndCountParams {
   categoryId?: number
   location?: 'north' | 'south' | 'east' | 'west' | 'center'
   schedule?: 'morning' | 'afternoon' | 'saturday'
+  disabled?: boolean
 }
 
 export interface VacancyServiceConfigI {

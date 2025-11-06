@@ -107,7 +107,23 @@ export class VacancyService implements VacancyServiceI {
   }
 
   async findAndCount (params: FindAndCountParams) {
-    const { limit, offset, order, search, includeCycle, includeDepartment, includeCategory, includeUsedSlots, departmentId, cycleId, studentId, categoryId, location, schedule } = params
+    const {
+      limit,
+      offset,
+      order,
+      search,
+      includeCycle,
+      includeDepartment,
+      includeCategory,
+      includeUsedSlots,
+      departmentId,
+      cycleId,
+      studentId,
+      categoryId,
+      location,
+      schedule,
+      disabled
+    } = params
     const db = this.db
 
     let countQuery = db.table('Vacancies')
@@ -156,6 +172,11 @@ export class VacancyService implements VacancyServiceI {
     if (schedule) {
       selectQuery = selectQuery.where('Vacancies.schedule', '=', schedule)
       countQuery = countQuery.where('schedule', '=', schedule)
+    }
+
+    if (disabled !== undefined) {
+      selectQuery = selectQuery.where('Vacancies.disabled', '=', disabled)
+      countQuery = countQuery.where('disabled', '=', disabled)
     }
 
     if (studentId) {
